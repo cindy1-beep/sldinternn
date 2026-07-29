@@ -372,7 +372,7 @@ input,select{font-family:inherit;}
 
 <script>
 // ======================================================================
-// DATA MODEL PENYEDERHANAAN SLD â€” DIPISAH PER SUMBER LISTRIK
+// DATA MODEL PENYEDERHANAAN SLD - DIPISAH PER SUMBER LISTRIK
 // Sumber: dokumen "Penyederhanaan SLD"
 // ======================================================================
 const PAGE_ORDER = ['cipaganti', 'bfa', 'genset'];
@@ -381,60 +381,60 @@ const PAGE_DEFINITIONS = {
     label: 'PLN Cipaganti',
     shortLabel: 'PLN Cipaganti',
     supply: 'PLN',
-    summary: 'Pusat PLN Cipaganti â€” 6 cabang penyederhanaan.',
+    summary: 'Pusat PLN Cipaganti - 6 cabang penyederhanaan.',
     verify: ['LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility'],
     notes: {
       'LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility': 'Nama panel pada sumber penyederhanaan masih berupa alternatif: Panel J. Box Baru Lantai 1 atau Panel Utility.'
     },
     routes: [
-      // PLN TM â€“ 1 PLN: seluruh alur lama setelah Panel TM dihapus dan diganti dua outgoing VCB.
-      { no:1, items:['PLN TM â€“ 1 PLN','Trafo 10','Panel TM','Panel VCB 4B/P'] },
-      { no:2, items:['PLN TM â€“ 1 PLN','Trafo 10','Panel TM','Panel VCB 5B/G'] },
+      // PLN TM - 1 PLN: seluruh alur lama setelah Panel TM dihapus dan diganti dua outgoing VCB.
+      { no:1, items:['PLN TM - 1 PLN','Trafo 10','Panel TM','Panel VCB 4B/P'] },
+      { no:2, items:['PLN TM - 1 PLN','Trafo 10','Panel TM','Panel VCB 5B/G'] },
 
-      // PLN TM â€“ 2 PLN: seluruh outgoing bercabang setelah ACTS.
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gedung 21 (Panel Distribusi Lantai 1)'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gardu Hubung'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Timur'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Barat'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Sumber TR Normal'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','GLaf Gedung 19'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Bakteri Tengah'] },
-      { no:3, items:['PLN TM â€“ 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Kritikal Pengemasan','Panel Kritikal'] },
+      // PLN TM - 2 PLN: seluruh outgoing bercabang setelah ACTS.
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gedung 21 (Panel Distribusi Lantai 1)'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gardu Hubung'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Timur'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Barat'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Sumber TR Normal'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','GLaf Gedung 19'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Bakteri Tengah'] },
+      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Kritikal Pengemasan','Panel Kritikal'] },
 
-      // PLN TM â€“ 3 PLN: Gedung 21 dilengkapi keterangan Panel Distribusi Lantai 1.
-      { no:4, items:['PLN TM â€“ 3 PLN','Trafo 11','Gedung 21 (Panel Distribusi Lantai 1)'] },
-      { no:5, items:['PLN TM â€“ 3 PLN','Trafo 11','LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility'] },
-      { no:6, items:['PLN TM â€“ 3 PLN','Trafo 11','Panel Freeze Drying'] },
+      // PLN TM - 3 PLN: Gedung 21 dilengkapi keterangan Panel Distribusi Lantai 1.
+      { no:4, items:['PLN TM - 3 PLN','Trafo 11','Gedung 21 (Panel Distribusi Lantai 1)'] },
+      { no:5, items:['PLN TM - 3 PLN','Trafo 11','LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility'] },
+      { no:6, items:['PLN TM - 3 PLN','Trafo 11','Panel Freeze Drying'] },
     ]
   },
   bfa: {
     label: 'PLN BFA',
     shortLabel: 'PLN BFA',
     supply: 'PLN',
-    summary: 'Pusat PLN BFA â€” 6 cabang penyederhanaan.',
+    summary: 'Pusat PLN BFA - 6 cabang penyederhanaan.',
     verify: ['MVMDP 20 kV','Non-Kritikal Gedung 43 New'],
     notes: {
       'MVMDP 20 kV': 'Posisi MVMDP 20 kV pada cabang SF6-4 mengikuti urutan pada dokumen penyederhanaan dan perlu dikonfirmasi terhadap SLD utama.',
       'Non-Kritikal Gedung 43 New': 'Penamaan beban akhir mengikuti dokumen penyederhanaan; verifikasi nama resmi panel/gedung masih diperlukan.'
     },
     routes: [
-      { no:1, items:['CB','SF6 â€“ 1','Gardu Hubung','Gedung 34 Baru'] },
-      { no:2, items:['CB','SF6 â€“ 1','Gardu Hubung','Panel MVMDP 20 kV','Trafo 20 kV','PHB Genset','Gedung 41B','LVMDP Kritikal dan Normal'] },
-      { no:3, items:['CB','SF6 â€“ 1','Gardu Hubung','Trafo 13','Gedung 36'] },
-      { no:4, items:['CB','SF6 â€“ 2','Gardu Gedung 43','Panel ACB A','Panel ATS','Cap Bank','LVMDP','PP UPS 6-BS'] },
-      { no:5, items:['CB','SF6 â€“ 3','Trafo 12 (Gardu Gedung 40)','Panel Distribusi Pilot Scale / Panel Utility'] },
-      { no:6, items:['CB','SF6 â€“ 4','Gardu 43 Baru PLN LV','Non-Kritikal Gedung 43 New'] },
+      { no:1, items:['CB','SF6 - 1','Gardu Hubung','Gedung 34 Baru'] },
+      { no:2, items:['CB','SF6 - 1','Gardu Hubung','Panel MVMDP 20 kV','Trafo 20 kV','PHB Genset','Gedung 41B','LVMDP Kritikal dan Normal'] },
+      { no:3, items:['CB','SF6 - 1','Gardu Hubung','Trafo 13','Gedung 36'] },
+      { no:4, items:['CB','SF6 - 2','Gardu Gedung 43','Panel ACB A','Panel ATS','Cap Bank','LVMDP','PP UPS 6-BS'] },
+      { no:5, items:['CB','SF6 - 3','Trafo 12 (Gardu Gedung 40)','Panel Distribusi Pilot Scale / Panel Utility'] },
+      { no:6, items:['CB','SF6 - 4','Gardu 43 Baru PLN LV','Non-Kritikal Gedung 43 New'] },
     ]
   },
   genset: {
     label: 'Genset',
     shortLabel: 'Genset',
     supply: 'Genset',
-    summary: 'Pusat Genset â€” 8 cabang penyederhanaan.',
+    summary: 'Pusat Genset - 8 cabang penyederhanaan.',
     verify: ['Panel Timur/Barat','ATS','Gedung Teknik'],
     notes: {
       'Panel Timur/Barat': 'Dokumen sumber menuliskan "Panel Timur Barat"; nama resmi panel perlu dikonfirmasi.',
-      'ATS': 'Cabang G6â€“Trafo 15 berhenti pada ATS; outgoing berikutnya belum dicantumkan pada dokumen penyederhanaan.',
+      'ATS': 'Cabang G6-Trafo 15 berhenti pada ATS; outgoing berikutnya belum dicantumkan pada dokumen penyederhanaan.',
       'Gedung Teknik': 'Cabang G7 berakhir dengan tanda lanjutan pada dokumen; outgoing setelah Gedung Teknik belum tersedia.',
       'Gardu Hubung': 'Pada cabang G4, Gardu Hubung memiliki empat outgoing: Panel Timur/Barat, Sumber TR Normal, Gedung 19, dan SDP Compressor Basement 36.'
     },
