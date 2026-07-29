@@ -411,19 +411,24 @@ const PAGE_DEFINITIONS = {
     label: 'PLN BFA',
     shortLabel: 'PLN BFA',
     supply: 'PLN',
-    summary: 'Pusat PLN BFA - 6 cabang penyederhanaan.',
-    verify: ['MVMDP 20 kV','Non-Kritikal Gedung 43 New'],
+    summary: 'Pusat PLN BFA - 12 cabang penyederhanaan.',
+    verify: ['Panel MVMDP 20kV'],
     notes: {
-      'MVMDP 20 kV': 'Posisi MVMDP 20 kV pada cabang SF6-4 mengikuti urutan pada dokumen penyederhanaan dan perlu dikonfirmasi terhadap SLD utama.',
-      'Non-Kritikal Gedung 43 New': 'Penamaan beban akhir mengikuti dokumen penyederhanaan; verifikasi nama resmi panel/gedung masih diperlukan.'
+      'Panel MVMDP 20kV': 'Posisi Panel MVMDP 20kV perlu dikonfirmasi kembali terhadap SLD utama bila ada perubahan di lapangan.'
     },
     routes: [
-      { no:1, items:['CB','SF6 - 1','Gardu Hubung','Gedung 34 Baru'] },
-      { no:2, items:['CB','SF6 - 1','Gardu Hubung','Panel MVMDP 20 kV','Trafo 20 kV','PHB Genset','Gedung 41B','LVMDP Kritikal dan Normal'] },
-      { no:3, items:['CB','SF6 - 1','Gardu Hubung','Trafo 13','Gedung 36'] },
-      { no:4, items:['CB','SF6 - 2','Gardu Gedung 43','Panel ACB A','Panel ATS','Cap Bank','LVMDP','PP UPS 6-BS'] },
-      { no:5, items:['CB','SF6 - 3','Trafo 12 (Gardu Gedung 40)','Panel Distribusi Pilot Scale / Panel Utility'] },
-      { no:6, items:['CB','SF6 - 4','Gardu 43 Baru PLN LV','Non-Kritikal Gedung 43 New'] },
+      { no:1, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Gedung 34 Non Kritikal'] },
+      { no:2, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','Gedung 34 Non Kritikal'] },
+      { no:3, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','PP. PH. 34L.1'] },
+      { no:4, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','SPARE 350kVA'] },
+      { no:5, items:['Panel CB','Panel SF6-1','Gardu Hubung','Panel MVMDP 20kV','Trafo 20kV','Panel Distribusi Genset','LVMDP KRITIKAL Gedung 41B'] },
+      { no:6, items:['Panel CB','Panel SF6-1','Gardu Hubung','Panel MVMDP 20kV','Trafo 20kV','Panel Distribusi Genset','LVMDP NORMAL Gedung 41B'] },
+      { no:7, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','LVMDP. 1 - 36 Lantai 2'] },
+      { no:8, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','LVMDP. 2 - 36 Lantai'] },
+      { no:9, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','Panel MDP-Gedung 3'] },
+      { no:10, items:['Panel CB','Panel SF6-2','Gardu Gedung 43','Panel ACB A','Panel ATS','Cap Bank','LVMDP','PP UPS 6-BS'] },
+      { no:11, items:['Panel CB','Panel SF6-3','Trafo 12 (Gardu Gedung 40)','Panel Distribusi Pilot Scale / Panel Utility'] },
+      { no:12, items:['Panel CB','Panel SBan3','Gardu Gedung 40','Trafo 12','Panel Distribusi Pilot Scale','Capasitor Bank'] },
     ]
   },
   genset: {
@@ -464,7 +469,7 @@ function inferNodeMeta(name, pageKey, isRoot){
   let type = 'equipment';
   if (isRoot) type = 'source';
   else if (pageKey === 'genset' && /^g\d+$/i.test(name.trim())) type = 'source';
-  else if (s === 'cb' || s.includes('sf6') || s.includes('panel tm') || s.includes('mvmdp') || s.includes('vcb')) type = 'hvmdp';
+  else if (s === 'cb' || s === 'panel cb' || s.includes('sf6') || s.includes('panel tm') || s.includes('mvmdp') || s.includes('vcb')) type = 'hvmdp';
   else if (s.includes('trafo') || s.includes('gardu') || s.includes('substation')) type = 'gardu';
   else if (s.includes('flywheel')) type = 'flywheel';
   else if (s.includes('lvmdp')) type = 'lvmdp';
