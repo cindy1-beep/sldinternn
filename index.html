@@ -1,1423 +1,327 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interactive Electrical Distribution Mapping Bio Farma | PT Bio Farma (Persero)</title>
-<style>
-:root{
-  /* ---- Neutral / surface tokens (light theme, matches referensi) ---- */
-  --page:#eef1f5; --dots:#dde4ec;
-  --card:#ffffff; --sidebar:#f7f9fc; --panel:#ffffff;
-  --line:#e2e8f0; --line-soft:#eef1f6;
-  --text-0:#0f172a; --text-1:#475569; --text-2:#94a3b8;
-  /* ---- Header (selalu gelap, seperti referensi) ---- */
-  --hdr-bg1:#0d1830; --hdr-bg2:#0a1220; --hdr-line:#22304a;
-  --hdr-text-0:#eef3fa; --hdr-text-1:#b9c6d9; --hdr-text-2:#7e91ab; --hdr-field:#152438;
-  /* ---- Warna cabang sumber (SAMA seperti diagram referensi) ---- */
-  --c-plnbfa:#ef4444;      /* PLN BFA -> merah */
-  --c-plnpew:#2563eb;      /* aksen biru antarmuka */
-  --c-gensetph:#f59e0b;    /* aksen oranye antarmuka */
-  --c-gensetss:#16a34a;    /* Genset Substation -> hijau */
-  /* ---- Warna status simulasi ---- */
-  --st-normal:#22c55e; --st-normal-bg:#eafaf0;
-  --st-padam:#ef4444; --st-padam-bg:#fdeded;
-  --st-genset:#f59e0b; --st-genset-bg:#fff6e6;
-  --st-standby:#94a3b8; --st-standby-bg:#f1f4f8;
-  --purple:#8b5cf6; --teal:#0891b2; --gray:#64748b;
-  --radius:10px;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-}
-*{box-sizing:border-box;}
-html,body{height:100%;margin:0;background:var(--page);color:var(--text-0);}
-body{display:flex;flex-direction:column;overflow:hidden;}
-button{font-family:inherit;cursor:pointer;}
-input,select{font-family:inherit;}
-::-webkit-scrollbar{width:9px;height:9px;}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;}
-::-webkit-scrollbar-track{background:transparent;}
-
-/* ================= HEADER (gelap, seperti referensi) ================= */
-#header{
-  display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;min-height:56px;flex-shrink:0;
-  background:linear-gradient(180deg,var(--hdr-bg1),var(--hdr-bg2));
-  border-bottom:1px solid var(--hdr-line);padding:8px 14px;
-}
-#brand{display:flex;align-items:center;gap:9px;flex-shrink:0;}
-#brand .logo{height:28px;width:auto;max-width:80px;object-fit:contain;flex-shrink:0;}
-#brand .titles{line-height:1.2;max-width:340px;}
-#brand .t1{font-size:13px;font-weight:700;color:var(--hdr-text-0);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#brand .t2{font-size:10px;color:var(--hdr-text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#searchWrap{flex:1 1 220px;min-width:200px;max-width:400px;position:relative;}
-#searchWrap input{
-  width:100%;background:var(--hdr-field);border:1px solid var(--hdr-line);color:var(--hdr-text-0);
-  border-radius:7px;padding:8px 10px 8px 30px;font-size:12.5px;outline:none;
-}
-#searchWrap input::placeholder{color:var(--hdr-text-2);}
-#searchWrap input:focus{border-color:var(--c-plnpew);}
-#searchWrap .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--hdr-text-2);font-size:12px;}
-#searchResults{
-  position:absolute;top:calc(100% + 6px);left:0;right:0;background:#ffffff;
-  border:1px solid var(--line);border-radius:8px;max-height:300px;overflow:auto;display:none;z-index:80;
-  box-shadow:0 16px 32px rgba(15,23,42,.18);
-}
-#searchResults div{padding:8px 11px;font-size:12px;color:var(--text-1);border-bottom:1px solid var(--line-soft);}
-#searchResults div:last-child{border-bottom:none;}
-#searchResults div:hover{background:#f1f5fb;color:var(--text-0);}
-#searchResults b{color:var(--text-0);}
-.hdr-block{display:flex;flex-direction:column;gap:3px;flex-shrink:0;}
-.hdr-label{font-size:8.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--hdr-text-2);}
-#modeToggle{display:flex;background:var(--hdr-field);border:1px solid var(--hdr-line);border-radius:7px;overflow:hidden;}
-#modeToggle button{border:none;background:transparent;color:var(--hdr-text-1);font-size:11px;padding:5px 10px;font-weight:700;white-space:nowrap;}
-#modeToggle button.active[data-mode="normal"]{background:var(--st-normal);color:#08240f;}
-#modeToggle button.active[data-mode="sim"]{background:var(--st-padam);color:#2e0505;}
-#scenarioSel{
-  background:var(--hdr-field);border:1px solid var(--hdr-line);color:var(--hdr-text-0);border-radius:7px;
-  padding:6px 8px;font-size:11px;min-width:150px;max-width:190px;
-}
-.hdr-btns{display:flex;gap:6px;flex-shrink:0;}
-.icon-btn{
-  background:var(--hdr-field);border:1px solid var(--hdr-line);color:var(--hdr-text-1);border-radius:7px;
-  width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:13px;
-}
-.icon-btn:hover{color:var(--hdr-text-0);border-color:var(--c-plnpew);}
-.icon-btn.help{background:var(--c-plnpew);color:#fff;font-weight:800;border-color:var(--c-plnpew);}
-
-
-/* ================= SOURCE PAGE NAVIGATION ================= */
-#sourcePagebar{
-  flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;
-  min-height:44px;padding:6px 14px;background:#ffffff;border-bottom:1px solid var(--line);
-  box-shadow:0 1px 2px rgba(15,23,42,.03);z-index:50;
-}
-#sourceTabs{display:flex;align-items:center;gap:6px;overflow-x:auto;min-width:0;}
-.source-tab{
-  border:1px solid var(--line);background:#f8fafc;color:var(--text-1);border-radius:8px;
-  padding:7px 12px;font-size:11.5px;font-weight:750;white-space:nowrap;
-}
-.source-tab:hover{border-color:var(--c-plnpew);color:var(--text-0);}
-.source-tab.active{background:#eaf1ff;border-color:#9dbcf7;color:#1d4ed8;box-shadow:inset 0 0 0 1px #c7d9fb;}
-#sourcePageMeta{font-size:10.5px;color:var(--text-2);text-align:right;white-space:nowrap;}
-@media (max-width:760px){
-  #sourcePagebar{align-items:flex-start;flex-direction:column;gap:5px;}
-  #sourcePageMeta{text-align:left;white-space:normal;}
-}
-
-/* ================= BODY / CANVAS (terang, seperti referensi) ================= */
-#body{flex:1;display:flex;min-height:0;}
-#canvasWrap{flex:1;position:relative;overflow:hidden;background:
-  radial-gradient(circle at 1px 1px, var(--dots) 1.4px, transparent 0) 0 0/24px 24px, var(--page);
-}
-#viewport{position:absolute;left:0;top:0;transform-origin:0 0;}
-#edgesSvg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}
-#nodesLayer{position:absolute;left:0;top:0;}
-
-.node{
-  position:absolute;width:176px;min-height:60px;border-radius:10px;
-  background:var(--card);border:1.6px solid var(--line);padding:8px 10px;
-  display:flex;flex-direction:column;justify-content:center;gap:2px;
-  cursor:pointer;user-select:none;transition:box-shadow .15s, border-color .15s, transform .1s;
-  box-shadow:0 1px 2px rgba(15,23,42,.06);
-}
-.node:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,23,42,.14);border-color:var(--type-color,#cbd5e1);}
-.node.selected{outline:2.5px solid var(--teal);outline-offset:1px;box-shadow:0 10px 24px rgba(8,145,178,.25);}
-.node.dim{opacity:.22;}
-.node.traced{outline:2.5px solid #0891b2;outline-offset:1px;box-shadow:0 0 0 4px rgba(8,145,178,.15);z-index:5;}
-.node.sim-padam{background:var(--st-padam-bg);}
-.node.sim-genset{background:var(--st-genset-bg);}
-@keyframes edgeBlink{0%,100%{opacity:1;}50%{opacity:.15;}}
-#edgesSvg path.edge-traced{animation:edgeBlink 1s ease-in-out infinite;}
-#edgesSvg path.edge-sim-padam{animation:edgeBlink 1.1s ease-in-out infinite;}
-#edgesSvg path.edge-sim-genset{animation:edgeBlink 1.1s ease-in-out infinite;}
-#edgesSvg path.edge-legend-active{animation:edgeBlink 1.2s ease-in-out infinite;}
-.node .row1{display:flex;align-items:center;gap:7px;}
-.node .badge{
-  width:24px;height:24px;border-radius:7px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-size:13px;background:var(--type-tint,#eef2f7);
-}
-.node .name{font-size:12.2px;font-weight:700;color:var(--text-0);line-height:1.25;}
-.node .meta{font-size:10.5px;color:var(--text-1);padding-left:31px;}
-.node .flag{position:absolute;top:-7px;right:-7px;font-size:11px;background:var(--st-genset);color:#241a02;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);}
-.node .statusdot{position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:var(--st-normal);box-shadow:0 0 0 2px #fff;}
-.node .statusdot.padam{background:var(--st-padam);}
-.node .statusdot.genset{background:var(--st-genset);}
-.node .collapseTag{position:absolute;right:-9px;top:50%;transform:translateY(-50%);background:#334155;border:1px solid #1e293b;color:#fff;font-size:9.5px;padding:1px 6px;border-radius:8px;font-weight:600;}
-
-/* warna aksen kiri kartu = warna jalur sumbernya (persis seperti referensi) */
-.node[data-type="equipment"]{width:132px;min-height:48px;}
-.node{border-left:4.5px solid var(--type-color,#94a3b8);}
-
-/* ================= TOOLBAR / MINIMAP / LEGEND ================= */
-#toolbar{position:absolute;left:14px;top:14px;display:flex;flex-direction:column;gap:6px;z-index:40;}
-#toolbar button{width:32px;height:32px;background:var(--card);border:1px solid var(--line);color:var(--text-1);border-radius:8px;font-size:15px;box-shadow:0 1px 3px rgba(15,23,42,.08);}
-#toolbar button:hover{color:var(--text-0);border-color:var(--c-plnpew);}
-
-#floatPanels{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;gap:10px;z-index:40;width:230px;}
-.float-card{background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:10px;padding:11px 13px;backdrop-filter:blur(4px);box-shadow:0 6px 20px rgba(15,23,42,.10);}
-.float-card h4{margin:0 0 8px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--text-2);font-weight:800;display:flex;align-items:center;justify-content:space-between;}
-.float-card .hideBtn{background:#f1f5f9;border:1px solid var(--line);border-radius:5px;width:18px;height:18px;line-height:1;font-size:11px;font-weight:700;color:var(--text-1);display:flex;align-items:center;justify-content:center;text-transform:none;letter-spacing:0;}
-.float-card .hideBtn:hover{border-color:var(--c-plnpew);color:var(--c-plnpew);}
-.float-card.collapsed{padding-bottom:11px;}
-.float-card.collapsed h4{margin-bottom:0;}
-.float-card.collapsed > *:not(h4){display:none !important;}
-#minimapCanvas{width:100%;height:110px;display:block;border-radius:6px;background:var(--page);cursor:pointer;border:1px solid var(--line-soft);}
-.legend-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text-1);margin-bottom:5px;}
-.legend-row:last-child{margin-bottom:0;}
-.legend-line{width:18px;height:0;border-top:2.5px dashed;flex-shrink:0;}
-.legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.legend-clickable{cursor:pointer;padding:3px 5px;margin:0 -5px 5px;border-radius:6px;transition:background .12s;}
-.legend-clickable:hover{background:#f1f5f9;}
-.legend-clickable.active{background:#e0f2fe;color:var(--text-0);font-weight:700;}
-.legend-swatch{width:13px;height:13px;border-radius:4px;flex-shrink:0;}
-.legend-sub{font-size:9.5px;color:var(--text-2);margin:2px 0 6px 25px;}
-
-#hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:11.5px;color:var(--text-1);background:rgba(255,255,255,.95);padding:7px 14px;border-radius:20px;border:1px solid var(--line);z-index:40;box-shadow:0 4px 14px rgba(15,23,42,.08);}
-
-#traceBanner{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:45;display:flex;align-items:center;gap:12px;background:#0891b2;color:#fff;padding:8px 10px 8px 16px;border-radius:22px;font-size:12px;font-weight:600;box-shadow:0 8px 22px rgba(8,145,178,.35);}
-#traceBanner .blinkdot{width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block;margin-right:6px;animation:edgeBlink 1s ease-in-out infinite;}
-#traceBanner button{background:rgba(255,255,255,.2);border:none;color:#fff;padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;}
-#traceBanner button:hover{background:rgba(255,255,255,.32);}
-
-/* ================= SIDEBAR ================= */
-#sidebar{width:320px;flex-shrink:0;border-left:1px solid var(--line);background:var(--sidebar);overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 1px 2px rgba(15,23,42,.04);}
-.panel h3{margin:0 0 8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;color:var(--text-0);}
-.panel h3 .x{cursor:pointer;color:var(--text-2);font-size:14px;}
-.kv{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:11.3px;gap:10px;}
-.kv:last-child{border-bottom:none;}
-.kv .k{color:var(--text-2);flex-shrink:0;}
-.kv .v{color:var(--text-0);font-weight:600;text-align:right;}
-.badgechip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
-.chip-red{background:var(--st-padam-bg);color:#b91c1c;}
-.chip-amber{background:var(--st-genset-bg);color:#b45309;}
-.chip-green{background:var(--st-normal-bg);color:#15803d;}
-.impact-row{display:flex;align-items:center;justify-content:space-between;font-size:11.3px;padding:4px 0;}
-.impact-row .dot{width:8px;height:8px;border-radius:50%;margin-right:7px;flex-shrink:0;display:inline-block;}
-.bar{height:6px;background:#eef1f6;border-radius:4px;overflow:hidden;margin-top:3px;}
-.bar > div{height:100%;}
-.mini-btn{width:100%;background:#eaf1ff;color:#1d4ed8;border:1px solid #d7e5fb;padding:7px;border-radius:7px;font-size:11.3px;font-weight:700;margin-top:7px;}
-.mini-btn:hover{border-color:var(--c-plnpew);}
-.mini-btn.active-trace{background:#0891b2;color:#fff;border-color:#0891b2;}
-.mini-btn.secondary{background:#f1f5f9;color:var(--text-1);border-color:var(--line);}
-.notelist{font-size:11px;color:var(--text-1);line-height:1.5;max-height:150px;overflow:auto;}
-.notelist div{padding:4px 0;border-bottom:1px dashed var(--line-soft);}
-.emptystate{font-size:11.3px;color:var(--text-2);text-align:center;padding:16px 4px;line-height:1.55;}
-.warnflag{color:#92400e;font-size:10.3px;background:var(--st-genset-bg);padding:7px 8px;border-radius:7px;margin-top:7px;line-height:1.45;border:1px solid #fde3b0;}
-
-/* ================= STATS BAR ================= */
-#statsbar{
-  flex-shrink:0;display:flex;align-items:center;gap:0;height:68px;
-  background:#ffffff;border-top:1px solid var(--line);padding:0 14px;overflow-x:auto;
-}
-.stat{display:flex;align-items:center;gap:10px;padding:0 18px;border-right:1px solid var(--line-soft);white-space:nowrap;}
-.stat:last-child{border-right:none;}
-.stat .si{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
-.stat .sl{font-size:10px;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em;}
-.stat .sv{font-size:17px;font-weight:800;color:var(--text-0);}
-
-/* ================= HELP MODAL (untuk orang awam) ================= */
-#helpOverlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;z-index:200;}
-#helpOverlay.open{display:flex;}
-#helpModal{background:#fff;border-radius:14px;max-width:560px;width:92%;max-height:82vh;overflow-y:auto;padding:22px 24px;box-shadow:0 24px 60px rgba(0,0,0,.35);}
-#helpModal h2{margin:0 0 4px;font-size:18px;color:var(--text-0);}
-#helpModal .sub{font-size:12.5px;color:var(--text-2);margin-bottom:16px;}
-#helpModal h4{font-size:12.5px;color:var(--text-0);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.04em;}
-#helpModal p, #helpModal li{font-size:13px;color:var(--text-1);line-height:1.65;}
-#helpModal ul{margin:0;padding-left:18px;}
-#helpModal .stepline{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
-#helpModal .stepnum{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#eaf1ff;color:#1d4ed8;font-size:11.5px;font-weight:800;display:flex;align-items:center;justify-content:center;}
-#helpModal .closeBtn{position:sticky;top:0;float:right;background:#f1f5f9;border:none;width:30px;height:30px;border-radius:50%;font-size:15px;color:var(--text-1);}
-
-@media (max-width:900px){
-  #sidebar{position:absolute;right:0;top:64px;bottom:68px;z-index:60;transform:translateX(100%);transition:transform .2s;}
-  #sidebar.open{transform:translateX(0);}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SLD Mindmap Viewer & Editor</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="view-mode">
 
-<div id="header">
-  <div id="brand">
-    <img class="logo" src="https://www.biofarma.co.id/bundle/default/images/biofarma-logo-footer-compressed-500.png" alt="Bio Farma">
-    <div class="titles">
-      <div class="t1">Interactive Electrical Distribution Mapping Bio Farma</div>
-      <div class="t2" id="brandSubtitle">PT Bio Farma (Persero) &middot; Penyederhanaan SLD per sumber listrik</div>
-    </div>
-  </div>
-  <div id="searchWrap">
-    <span class="ic">&#128269;</span>
-    <input id="searchInput" type="text" placeholder="Cari aset pada halaman sumber yang aktif...">
-    <div id="searchResults"></div>
-  </div>
-  <div class="hdr-block">
-    <span class="hdr-label">Mode Tampilan</span>
-    <div id="modeToggle">
-      <button data-mode="normal" class="active">&#9679; Normal</button>
-      <button data-mode="sim">&#9888; Simulasi</button>
-    </div>
-  </div>
-  <div class="hdr-block">
-    <span class="hdr-label">Skenario Gangguan</span>
-    <select id="scenarioSel"></select>
-  </div>
-  <div class="hdr-btns">
-    <button class="icon-btn help" id="btnHelp" title="Cara Menggunakan Diagram Ini">?</button>
-    <button class="icon-btn" id="btnRefresh" title="Reset ke Normal">&#8635;</button>
-    <button class="icon-btn" id="btnDownload" title="Unduh / Cetak PDF">&#8595;</button>
-    <button class="icon-btn" id="btnFullscreen" title="Fullscreen">&#9974;</button>
-  </div>
-</div>
-
-<div id="sourcePagebar">
-  <div id="sourceTabs" aria-label="Halaman sumber listrik"></div>
-  <div id="sourcePageMeta"></div>
-</div>
-
-<div id="body">
-  <div id="canvasWrap">
-    <div id="viewport">
-      <svg id="edgesSvg"></svg>
-      <div id="nodesLayer"></div>
-    </div>
-
-    <div id="toolbar">
-      <button id="zoomIn" title="Perbesar">+</button>
-      <button id="zoomOut" title="Perkecil">&minus;</button>
-      <button id="zoomFit" title="Fit">&#9635;</button>
-    </div>
-
-    <div id="floatPanels">
-      <div class="float-card" id="minimapCard">
-        <h4>Minimap <button class="hideBtn" data-target="minimapCard" title="Sembunyikan/Tampilkan Minimap">&#8722;</button></h4>
-        <canvas id="minimapCanvas"></canvas>
+  <!-- ================= HEADER ================= -->
+  <header id="header">
+    <div id="brand">
+      <div class="titles">
+        <div class="t1">SINGLE LINE DIAGRAM KELISTRIKAN</div>
+        <div class="t2">Sistem Monitoring & Peta Distribusi Kelistrikan</div>
       </div>
-      <div class="float-card" id="levelLegendCard">
-        <h4>Warna Panel &middot; Berdasarkan Level <button class="hideBtn" data-target="levelLegendCard" title="Sembunyikan/Tampilkan">&#8722;</button></h4>
-        <div id="levelLegendBody"></div>
-        <div class="legend-sub">Warna kotak menandakan LEVEL/jenis panel (bukan berasal dari sumber PLN mana), supaya konsisten di seluruh diagram &mdash; sama seperti software ETAP/EcoStruxure.</div>
+    </div>
+
+    <!-- SEARCH BAR -->
+    <div id="searchWrap">
+      <span class="ic">&#128065;</span>
+      <input type="text" id="searchInput" placeholder="Cari nama panel atau aset...">
+      <div id="searchResults"></div>
+    </div>
+
+    <!-- MODE APLIKASI (VIEW / EDITOR) DI SEBELAH KANAN SEARCH BAR -->
+    <div class="hdr-block">
+      <div class="hdr-label">Mode Aplikasi</div>
+      <div id="appModeToggle">
+        <button id="btnViewMode" class="active" title="Mode Lihat (Read Only)">View</button>
+        <button id="btnEditMode" title="Mode Edit (Tambah / Ubah / Hapus Node)">Editor</button>
       </div>
-      <div class="float-card" id="legendCard">
-        <h4>Legenda &middot; Jenis Kabel <button class="hideBtn" data-target="legendCard" title="Sembunyikan/Tampilkan Legenda">&#8722;</button></h4>
-        <div class="legend-row legend-clickable" data-filter="mv-pln"><span class="legend-line" style="border-color:#2563EB"></span>Tegangan Menengah &ndash; PLN</div>
-        <div class="legend-row legend-clickable" data-filter="mv-genset"><span class="legend-line" style="border-color:#8B5CF6"></span>Tegangan Menengah &ndash; Genset</div>
-        <div class="legend-row legend-clickable" data-filter="lv-pln"><span class="legend-line" style="border-color:#16A34A"></span>Tegangan Rendah &ndash; PLN</div>
-        <div class="legend-row legend-clickable" data-filter="lv-genset"><span class="legend-line" style="border-color:#F97316"></span>Tegangan Rendah &ndash; Genset</div>
-        <div class="legend-row legend-clickable" data-filter="standby"><span class="legend-line" style="border-color:#ABAFB7"></span>Jalur Cadangan (Standby)</div>
-        <div class="legend-sub">Klik salah satu jalur di atas untuk menyorot rutenya di diagram. "Tegangan Menengah" = kabel besar dari gardu induk. "Tegangan Rendah" = kabel yang sampai ke panel gedung.</div>
-        <div class="legend-row" style="margin-top:2px;border-top:1px solid var(--line-soft);padding-top:8px;">
-          <span class="legend-dot" style="background:#22c55e"></span>Menyala Normal
+    </div>
+
+    <!-- TOMBOL SAVE DALAM BENTUK ICON SAJA -->
+    <button class="icon-btn" id="btnSaveAll" style="display: none;" title="Simpan Semua Data ke Storage">&#128190;</button>
+
+    <!-- MODE SIMULASI & SKENARIOS -->
+    <div class="hdr-block" style="margin-left: auto;">
+      <div class="hdr-label">Simulasi Gangguan</div>
+      <div id="modeToggle">
+        <button data-mode="normal" class="active">Normal</button>
+        <button data-mode="sim">Simulasi</button>
+      </div>
+    </div>
+
+    <div class="hdr-block">
+      <div class="hdr-label">Skenario Titik Gangguan</div>
+      <select id="scenarioSel">
+        <option value="NONE">Normal (Tidak Ada Gangguan)</option>
+      </select>
+    </div>
+
+    <!-- UTILITY CONTROL BUTTONS -->
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <button class="icon-btn" id="btnRefresh" title="Reset Tampilan & Zoom">&#8635;</button>
+      <button class="icon-btn" id="btnDownload" title="Cetak / Export PDF">&#128438;</button>
+      <button class="icon-btn" id="btnFullscreen" title="Layar Penuh">&#19715;</button>
+      <button class="icon-btn help" id="btnHelp" title="Bantuan & Petunjuk Penggunaan">?</button>
+    </div>
+  </header>
+
+  <!-- ================= NAVIGATION BAR (SOURCE TABS) ================= -->
+  <nav id="sourcePagebar">
+    <div id="sourceTabs">
+      <!-- Tabs Halaman Diberikan Secara Dinamis via Script -->
+    </div>
+    <div id="sourcePageRightControls">
+      <div id="sourcePageMeta"></div>
+    </div>
+  </nav>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <div id="body">
+    <!-- CANVAS WRAPPER -->
+    <div id="canvasWrap">
+      <div id="viewport">
+        <svg id="edgesSvg"></svg>
+        <div id="nodesLayer"></div>
+      </div>
+
+      <!-- CANVAS EMPTY PROMPT -->
+      <div id="emptyCanvasPrompt" class="emptystate-canvas" style="display: none;">
+        <h3>Halaman ini Kosong</h3>
+        <p>Belum ada node kelistrikan pada halaman mindmap ini.</p>
+        <button class="mini-btn primary" id="btnCreateFirstNode" style="margin-top: 10px;">+ Buat Node Utama (Root)</button>
+      </div>
+
+      <!-- BANNER SPOTLIGHT / TRACE -->
+      <div id="traceBanner" style="display: none;">
+        <span id="traceBannerText"></span>
+        <button id="traceBannerStop">Hentikan Penyorotan</button>
+      </div>
+
+      <!-- UNIFIED FLOATING CARD (MINIMAP + LEGEND) -->
+      <div id="floatPanels">
+        <div class="float-card" id="unifiedCard">
+          <div class="float-card-header">
+            <h4>Peta & Legenda Jalur</h4>
+            <button class="toggle-side-btn" id="btnToggleUnified" title="Ciutkan / Perluas Card">&#9666;</button>
+          </div>
+          <div class="float-card-content">
+            <div class="panel-section">
+              <h5>Minimap Overview</h5>
+              <canvas id="minimapCanvas"></canvas>
+            </div>
+            <div class="panel-section">
+              <h5>Hierarki Level Aset</h5>
+              <div id="levelLegendBody">
+                <!-- Diisi secara dinamis -->
+              </div>
+            </div>
+            <div class="panel-section">
+              <h5>Filter Jenis Jalur (Klik)</h5>
+              <div class="legend-row legend-clickable" data-filter="mv-pln">
+                <span class="legend-line" style="border-color:#2563EB;"></span> Tegangan Menengah – PLN
+              </div>
+              <div class="legend-row legend-clickable" data-filter="mv-genset">
+                <span class="legend-line" style="border-color:#8B5CF6;"></span> Tegangan Menengah – Genset
+              </div>
+              <div class="legend-row legend-clickable" data-filter="lv-pln">
+                <span class="legend-line" style="border-color:#16A34A;"></span> Tegangan Rendah – PLN
+              </div>
+              <div class="legend-row legend-clickable" data-filter="lv-genset">
+                <span class="legend-line" style="border-color:#F97316;"></span> Tegangan Rendah – Genset
+              </div>
+              <div class="legend-row legend-clickable" data-filter="standby">
+                <span class="legend-line" style="border-color:#ABAFB7; border-style:dashed;"></span> Jalur Cadangan (Standby)
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="legend-row"><span class="legend-dot" style="background:#ef4444"></span>Padam / Mati Listrik</div>
-        <div class="legend-row"><span class="legend-dot" style="background:#f59e0b"></span>Menyala Pakai Genset (Cadangan)</div>
-        <div class="legend-row"><span style="display:inline-flex;align-items:center;justify-content:center;background:#f59e0b;color:#241a02;border-radius:50%;width:14px;height:14px;font-size:9px;font-weight:800;">!</span>&nbsp;Data Perlu Dicek Ulang di Lapangan</div>
+      </div>
+
+      <!-- CANVAS TOOLBAR (ZOOM) -->
+      <div id="toolbar">
+        <button id="zoomIn" title="Perbesar (Zoom In)">+</button>
+        <button id="zoomOut" title="Perkecil (Zoom Out)">&minus;</button>
+        <button id="zoomFit" title="Suaikan Layar (Fit to Screen)">&#244;</button>
       </div>
     </div>
 
-    <div id="traceBanner" style="display:none;">
-      <span id="traceBannerText"></span>
-      <button id="traceBannerStop">&#10005; Hentikan Penyorotan</button>
-    </div>
+    <!-- SIDEBAR DETAIL ASET & SIMULASI -->
+    <aside id="sidebar">
+      <button id="btnToggleSidebar" title="Ciutkan / Perluas Sidebar">&#9656;</button>
+      <div id="sidebarContent">
+        <div class="panel">
+          <h3>Detail & Kondisi Aset</h3>
+          <div id="assetBody">
+            <div class="emptystate">Klik salah satu aset pada kanvas untuk menampilkan detailnya.</div>
+          </div>
+        </div>
 
-    <div id="hint">Klik pada panel/gedung/equipment untuk melihat informasi detail &middot; drag untuk geser &middot; scroll untuk zoom</div>
+        <!-- PANEL HASIL SIMULASI -->
+        <div class="panel" id="simResultPanel" style="display: none;">
+          <h3>Dampak Simulasi <span class="x" id="closeSim">&times;</span></h3>
+          <div id="simBody"></div>
+        </div>
+      </div>
+    </aside>
   </div>
 
-  <div id="sidebar">
-    <div class="panel" id="simResultPanel" style="display:none;">
-      <h3>&#9888;&#65039; Hasil Simulasi <span class="x" id="closeSim">&times;</span></h3>
-      <div id="simBody"></div>
-    </div>
+  <!-- STATSBAR BOTTOM -->
+  <div id="statsbar"></div>
 
-    <div class="panel" id="assetPanel">
-      <h3>Informasi Aset</h3>
-      <div id="assetBody"><div class="emptystate">Klik salah satu aset pada kanvas untuk menampilkan sumber, cabang, incoming, outgoing, dan status verifikasinya.</div></div>
-    </div>
-
-    <div class="panel">
-      <h3>Tentang Data</h3>
-      <div id="aboutDataBody" style="font-size:12px;color:var(--text-1);line-height:1.65;">
-        Diagram ini menggunakan data <b>Penyederhanaan SLD</b> dan dipisahkan menjadi halaman <b>PLN Cipaganti</b>, <b>PLN BFA</b>, dan <b>Genset</b>. Pilih halaman sumber melalui tab di atas kanvas.
+  <!-- ================= MODAL EDIT / TAMBAH NODE ================= -->
+  <div class="modal-overlay" id="nodeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Tambah / Edit Node Aset</h3>
+        <button class="close-btn" id="btnCloseModalHeader">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="modalName">Nama Panel / Aset *</label>
+          <input type="text" id="modalName" placeholder="Contoh: LVMDP Gedung 19">
+        </div>
+        <div class="form-group">
+          <label for="modalType">Jenis Aset / Level Hierarki *</label>
+          <select id="modalType"></select>
+        </div>
+        <div class="form-group">
+          <label for="modalParent">Panel Parent (Incoming Utama)</label>
+          <select id="modalParent"></select>
+        </div>
+        <div class="form-group">
+          <label for="modalAltParent">Panel Backup (Jalur Cadangan / Standby)</label>
+          <select id="modalAltParent"></select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="modalSupply">Sumber Daya</label>
+            <select id="modalSupply">
+              <option value="PLN">PLN</option>
+              <option value="Genset">Genset</option>
+              <option value="UPS">UPS</option>
+              <option value="Solar">Solar</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="modalVoltage">Tegangan</label>
+            <select id="modalVoltage">
+              <option value="MV">TM (Tegangan Menengah)</option>
+              <option value="LV">TR (Tegangan Rendah)</option>
+              <option value="MV/LV">TM / TR</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modalCapacity">Kapasitas (Opsional)</label>
+          <input type="text" id="modalCapacity" placeholder="Contoh: 1000 kVA / 1600 A">
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="modalVerified">Status Verifikasi Lapangan</label>
+            <select id="modalVerified">
+              <option value="true">✅ Terverifikasi</option>
+              <option value="false">⚠️ Perlu Verifikasi (!)</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="modalCritical">Klasifikasi Beban</label>
+            <select id="modalCritical">
+              <option value="null">Standar / General</option>
+              <option value="true">⚡ Beban Kritikal</option>
+              <option value="false">🏢 Beban Non-Kritikal</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="modalNote">Catatan / Keterangan Tambahan</label>
+          <textarea id="modalNote" rows="2" placeholder="Tuliskan keterangan pendukung..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="mini-btn danger" id="btnModalDelete" style="display: none; width: auto; margin: 0;">&#128465; Hapus</button>
+        <div style="margin-left: auto; display: flex; gap: 6px;">
+          <button class="mini-btn secondary" id="btnCancelNode" style="width: auto; margin: 0;">Batal</button>
+          <button class="mini-btn primary" id="btnSaveNode" style="width: auto; margin: 0;">Simpan Aset</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div id="statsbar"></div>
-
-<div id="helpOverlay">
-  <div id="helpModal">
-    <button class="closeBtn" id="closeHelp">&times;</button>
-    <h2>Cara Membaca &amp; Menggunakan Diagram Ini</h2>
-    <div class="sub">Panduan singkat untuk yang belum terbiasa membaca diagram kelistrikan</div>
-
-    <h4>Apa isi diagram ini?</h4>
-    <p>Ini adalah peta penyederhanaan jalur listrik PT Bio Farma. Setiap tab menampilkan satu kelompok sumber listrik, lalu aliran dibaca dari kiri ke kanan melalui trafo, gardu, panel, LVMDP/SDP, hingga gedung atau beban akhir.</p>
-
-    <h4>Apa arti warna kotak &amp; garis?</h4>
-    <ul>
-      <li><b>Warna kotak panel</b> menunjukkan LEVEL/tingkatannya dalam sistem kelistrikan (bukan berasal dari sumber PLN mana): <span style="color:#2563EB;font-weight:700;">biru = Sumber</span>, <span style="color:#7C3AED;font-weight:700;">ungu = Tegangan Menengah</span>, <span style="color:#16A34A;font-weight:700;">hijau = Gardu/Substation</span>, <span style="color:#F97316;font-weight:700;">oranye = LVMDP</span>, <span style="color:#EAB308;font-weight:700;">kuning = Main Distribution (ACB/ATS)</span>, <span style="color:#06B6D4;font-weight:700;">cyan = Sub Distribution (SDP/PSDP)</span>, <span style="color:#6B7280;font-weight:700;">abu = Equipment</span>. Urutan warna ini sama di sepanjang diagram, jadi begitu hafal satu warna, langsung tahu jenis panelnya di mana pun posisinya.</li>
-      <li><b>Warna garis putus-putus</b> menunjukkan jenis kabelnya, bukan levelnya: biru/ungu untuk kabel besar dari gardu induk (Tegangan Menengah dari PLN/Genset), hijau/oranye untuk kabel yang masuk ke gedung (Tegangan Rendah dari PLN/Genset), abu-abu untuk jalur cadangan (standby).</li>
-      <li><b>Titik warna di pojok kotak</b> (saat mode Simulasi aktif) menunjukkan kondisi panel: <span style="color:#15803d;font-weight:700;">hijau = menyala normal</span>, <span style="color:#b91c1c;font-weight:700;">merah = padam</span>, <span style="color:#b45309;font-weight:700;">oranye = menyala pakai genset cadangan</span>.</li>
-      <li><b>Tanda &#9888; kuning</b> di sudut kotak artinya data titik itu belum sepenuhnya pasti dan perlu dicek ulang di lapangan.</li>
-    </ul>
-
-    <h4>Cara memakainya</h4>
-    <div class="stepline"><span class="stepnum">1</span><span>Geser diagram dengan cara klik-tahan lalu tarik. Perbesar/perkecil dengan scroll mouse atau tombol +/&minus; di kiri atas.</span></div>
-    <div class="stepline"><span class="stepnum">2</span><span>Klik kotak panel mana saja untuk melihat detail lengkapnya di kanan (nama, lokasi, sumber listrik, dan seterusnya). Ada juga tombol <b>Trace Upstream</b> (menelusuri ke arah sumber listrik) dan <b>Trace Downstream</b> (menelusuri semua panel di bawahnya) untuk menyorot jalurnya di diagram.</span></div>
-    <div class="stepline"><span class="stepnum">2b</span><span>Klik salah satu baris di kotak "Legenda &middot; Jenis Kabel" (kiri bawah) untuk menyorot semua kabel dengan jenis yang sama di seluruh diagram.</span></div>
-    <div class="stepline"><span class="stepnum">3</span><span>Ketik nama gedung/panel di kotak pencarian atas untuk langsung meloncat ke sana.</span></div>
-    <div class="stepline"><span class="stepnum">4</span><span>Untuk mensimulasikan gangguan pada halaman sumber yang sedang aktif, pilih aset dari menu <b>Skenario Gangguan</b> di atas, atau klik tombol <b>Simulasi</b>. Diagram akan menandai seluruh aset di sisi downstream yang terdampak.</span></div>
-    <div class="stepline"><span class="stepnum">5</span><span>Tombol &#8635; di kanan atas mengembalikan tampilan ke kondisi normal (tidak ada gangguan).</span></div>
+  <!-- ================= MODAL TAMBAH HALAMAN MINDMAP ================= -->
+  <div class="modal-overlay" id="pageModal">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Tambah Halaman Mindmap Baru</h3>
+        <button class="close-btn" id="btnClosePageModalHeader">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="pageTitle">Judul Halaman Mindmap *</label>
+          <input type="text" id="pageTitle" placeholder="Contoh: PLN Paster / Gardu Utama">
+        </div>
+        <div class="form-group">
+          <label for="pageSupply">Sumber Suplai Utama</label>
+          <select id="pageSupply">
+            <option value="PLN">PLN</option>
+            <option value="Genset">Genset</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="mini-btn secondary" id="btnCancelPage" style="width: auto; margin: 0;">Batal</button>
+        <button class="mini-btn primary" id="btnSavePage" style="width: auto; margin: 0;">Buat Halaman</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<script>
-// ======================================================================
-// DATA MODEL PENYEDERHANAAN SLD - DIPISAH PER SUMBER LISTRIK
-// Sumber: dokumen "Penyederhanaan SLD"
-// ======================================================================
-const PAGE_ORDER = ['cipaganti', 'bfa', 'genset'];
-const PAGE_DEFINITIONS = {
-  cipaganti: {
-    label: 'PLN Cipaganti',
-    shortLabel: 'PLN Cipaganti',
-    supply: 'PLN',
-    summary: 'Pusat PLN Cipaganti - 6 cabang penyederhanaan.',
-    verify: ['LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility'],
-    notes: {
-      'LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility': 'Nama panel pada sumber penyederhanaan masih berupa alternatif: Panel J. Box Baru Lantai 1 atau Panel Utility.'
-    },
-    routes: [
-      // PLN TM - 1 PLN: seluruh alur lama setelah Panel TM dihapus dan diganti dua outgoing VCB.
-      { no:1, items:['PLN TM - 1 PLN','Trafo 10','Panel TM','Panel VCB 4B/P'] },
-      { no:2, items:['PLN TM - 1 PLN','Trafo 10','Panel TM','Panel VCB 5B/G'] },
-
-      // PLN TM - 2 PLN: seluruh outgoing bercabang setelah ACTS.
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gedung 21 (Panel Distribusi Lantai 1)'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Gardu Hubung'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Timur'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Barat'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Sumber TR Normal'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','GLaf Gedung 19'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Bakteri Tengah'] },
-      { no:3, items:['PLN TM - 2 PLN','Panel VCB 4','Trafo 9','Panel ACB1 FW','ACTS','Panel Kritikal Pengemasan','Panel Kritikal'] },
-
-      // PLN TM - 3 PLN: Gedung 21 dilengkapi keterangan Panel Distribusi Lantai 1.
-      { no:4, items:['PLN TM - 3 PLN','Trafo 11','Gedung 21 (Panel Distribusi Lantai 1)'] },
-      { no:5, items:['PLN TM - 3 PLN','Trafo 11','LVMDP GWT / Panel J. Box Baru Lantai 1 / Panel Utility'] },
-      { no:6, items:['PLN TM - 3 PLN','Trafo 11','Panel Freeze Drying'] },
-    ]
-  },
-  bfa: {
-    label: 'PLN BFA',
-    shortLabel: 'PLN BFA',
-    supply: 'PLN',
-    summary: 'Pusat PLN BFA - 12 cabang penyederhanaan.',
-    verify: ['Panel MVMDP 20kV'],
-    notes: {
-      'Panel MVMDP 20kV': 'Posisi Panel MVMDP 20kV perlu dikonfirmasi kembali terhadap SLD utama bila ada perubahan di lapangan.'
-    },
-    routes: [
-      { no:1, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Gedung 34 Non Kritikal'] },
-      { no:2, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','Gedung 34 Non Kritikal'] },
-      { no:3, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','PP. PH. 34L.1'] },
-      { no:4, items:['Panel CB','Panel SF6-1','Gardu Hubung','Gardu 34 Baru','Panel Temprorary Non Kritikal','SPARE 350kVA'] },
-      { no:5, items:['Panel CB','Panel SF6-1','Gardu Hubung','Panel MVMDP 20kV','Trafo 20kV','Panel Distribusi Genset','LVMDP KRITIKAL Gedung 41B'] },
-      { no:6, items:['Panel CB','Panel SF6-1','Gardu Hubung','Panel MVMDP 20kV','Trafo 20kV','Panel Distribusi Genset','LVMDP NORMAL Gedung 41B'] },
-      { no:7, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','LVMDP. 1 - 36 Lantai 2'] },
-      { no:8, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','LVMDP. 2 - 36 Lantai'] },
-      { no:9, items:['Panel CB','Panel SF6-1','Gardu Hubung','Trafo-13','Panel MDP-Gedung 3'] },
-      { no:10, items:['Panel CB','Panel SF6-2','Gardu Gedung 43','Panel ACB A','Panel ATS','Cap Bank','LVMDP','PP UPS 6-BS'] },
-      { no:11, items:['Panel CB','Panel SF6-3','Trafo 12 (Gardu Gedung 40)','Panel Distribusi Pilot Scale / Panel Utility'] },
-      { no:12, items:['Panel CB','Panel SBan3','Gardu Gedung 40','Trafo 12','Panel Distribusi Pilot Scale','Capasitor Bank'] },
-    ]
-  },
-  genset: {
-    label: 'Genset',
-    shortLabel: 'Genset',
-    supply: 'Genset',
-    summary: 'Pusat Genset - 8 cabang penyederhanaan.',
-    verify: ['Panel Timur/Barat','ATS','Gedung Teknik'],
-    notes: {
-      'Panel Timur/Barat': 'Dokumen sumber menuliskan "Panel Timur Barat"; nama resmi panel perlu dikonfirmasi.',
-      'ATS': 'Cabang G6-Trafo 15 berhenti pada ATS; outgoing berikutnya belum dicantumkan pada dokumen penyederhanaan.',
-      'Gedung Teknik': 'Cabang G7 berakhir dengan tanda lanjutan pada dokumen; outgoing setelah Gedung Teknik belum tersedia.',
-      'Gardu Hubung': 'Pada cabang G4, Gardu Hubung memiliki empat outgoing: Panel Timur/Barat, Sumber TR Normal, Gedung 19, dan SDP Compressor Basement 36.'
-    },
-    routes: [
-      { no:1, items:['Trafo 2 Polio','ACTS','Flywheel Gedung 33','ACTS','Panel ACB 2 PLN','LVMDP Substation'] },
-      { no:2, items:['Trafo 5','ACTS','Flywheel Gedung 29','LVMDP-UPS Gedung 29','Gardu Hubung','Panel Timur/Barat'] },
-      { no:2, items:['Trafo 5','ACTS','Flywheel Gedung 29','LVMDP-UPS Gedung 29','Gardu Hubung','Sumber TR Normal'] },
-      { no:2, items:['Trafo 5','ACTS','Flywheel Gedung 29','LVMDP-UPS Gedung 29','Gardu Hubung','Gedung 19'] },
-      { no:2, items:['Trafo 5','ACTS','Flywheel Gedung 29','LVMDP-UPS Gedung 29','Gardu Hubung','SDP Compressor Basement 36'] },
-      { no:3, items:['Trafo 6','Panel ACB 10','Panel DIST 8','SDP Compressor Basement 36'] },
-      { no:4, items:['Genset Panel VCB 1G','Trafo 14','LVMDP Gedung 36','Panel MDP Gedung 3'] },
-      { no:5, items:['Genset Panel VCB 1G','Trafo 15','ATS'] },
-      { no:6, items:['Trafo 7','Panel DIST 9','Gedung Teknik'] },
-      { no:7, items:['Trafo 1 Polio','LVMDP Substation','To ATS SPF'] },
-      { no:8, items:['Trafo 1 Polio','ACTS','Flywheel Gedung 33','ACTS','Panel ACB 2 PLN','LVMDP Substation'] },
-    ]
-  }
-};
-
-function slugId(value){
-  return value.normalize('NFKD').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toUpperCase().slice(0,42) || 'NODE';
-}
-
-function inferNodeMeta(name, pageKey, isRoot){
-  const s = name.toLowerCase();
-  const supply = PAGE_DEFINITIONS[pageKey].supply;
-  let type = 'equipment';
-  if (isRoot) type = 'source';
-  else if (pageKey === 'genset' && /^g\d+$/i.test(name.trim())) type = 'source';
-  else if (s === 'cb' || s === 'panel cb' || s.includes('sf6') || s.includes('panel tm') || s.includes('mvmdp') || s.includes('vcb')) type = 'hvmdp';
-  else if (s.includes('trafo') || s.includes('gardu') || s.includes('substation')) type = 'gardu';
-  else if (s.includes('flywheel')) type = 'flywheel';
-  else if (s.includes('lvmdp')) type = 'lvmdp';
-  else if (s.includes('panel acb') || /^acb\b/i.test(name)) type = 'acb';
-  else if (s.includes('acts') || s.includes('ats')) type = 'ats';
-  else if (s.includes('sdp') || s.includes('pp ups')) type = 'sdp';
-  else if (s.includes('panel') || s.includes('phb') || s.includes('cap bank') || s.includes('sumber tr')) type = 'distribution';
-  else if (s.includes('gedung') || s.includes('non-kritikal')) type = 'building';
-
-  let voltage = 'LV';
-  if (isRoot) voltage = pageKey === 'genset' ? 'MV/LV' : 'MV';
-  else if (type === 'source') voltage = 'MV/LV';
-  else if (type === 'hvmdp') voltage = 'MV';
-  else if (type === 'gardu') voltage = s.includes('trafo') ? 'MV/LV' : 'MV';
-  else if (type === 'flywheel') voltage = 'LV';
-
-  return { type, supply, voltage };
-}
-
-function buildNodesForPage(pageKey){
-  const page = PAGE_DEFINITIONS[pageKey];
-  const rootId = 'ROOT-' + pageKey.toUpperCase();
-  const rootMeta = inferNodeMeta(page.label, pageKey, true);
-  const nodes = [{
-    id:rootId, name:page.label, parent:null, pageKey, branchNos:[],
-    type:rootMeta.type, supply:rootMeta.supply, voltage:rootMeta.voltage,
-    critical:null, verified:true, note:page.summary
-  }];
-  const nodeByParentAndName = new Map();
-  let sequence = 0;
-
-  page.routes.forEach(route => {
-    let parentId = rootId;
-    route.items.forEach(name => {
-      const key = parentId + '||' + name;
-      let node = nodeByParentAndName.get(key);
-      if (!node) {
-        const meta = inferNodeMeta(name, pageKey, false);
-        node = {
-          id:pageKey.toUpperCase() + '-' + String(++sequence).padStart(3,'0') + '-' + slugId(name),
-          name, parent:parentId, pageKey, branchNos:[route.no],
-          type:meta.type, supply:meta.supply, voltage:meta.voltage,
-          critical:null,
-          verified:!page.verify.includes(name),
-          note:page.notes[name] || ''
-        };
-        nodes.push(node);
-        nodeByParentAndName.set(key, node);
-      } else if (!node.branchNos.includes(route.no)) {
-        node.branchNos.push(route.no);
-      }
-      parentId = node.id;
-    });
-  });
-  return nodes;
-}
-
-function buildScenariosForPage(nodes){
-  const options = [{ id:'NONE', label:'Normal (Tidak Ada Gangguan)' }];
-  const selected = nodes.filter((n, index) => {
-    if (index === 0) return true;
-    const level = levelOf(n);
-    const hasChildren = nodes.some(x => x.parent === n.id);
-    return hasChildren && level <= 4;
-  });
-  selected.slice(0,24).forEach(n => options.push({ id:n.id, label:n.name + ' Gangguan' }));
-  return options;
-}
-
-let NODES = [];
-let SCENARIOS = [];
-
-// ======================================================================
-// TYPE META (icon badge label + default color per node type)
-// ======================================================================
-// Ikon dibuat intuitif (bukan kode 2-huruf) supaya mudah ditebak orang awam
-const TYPE_META = {
-  source:      { icon:'&#9889;', name:'Sumber Listrik (PLN / Genset / UPS / Flywheel)', level:1 },
-  ups:         { icon:'&#128267;', name:'UPS', level:1 },
-  flywheel:    { icon:'&#128267;', name:'UPS / Flywheel', level:4 },
-  hvmdp:       { icon:'&#128268;', name:'Tegangan Menengah (HVMDP/MVMDP)', level:2 },
-  gardu:       { icon:'&#127981;', name:'Gardu / Substation / Power House', level:3 },
-  lvmdp:       { icon:'&#128230;', name:'LVMDP', level:4 },
-  acb:         { icon:'&#128737;&#65039;', name:'Main Distribution (ACB/VCB/MCCB)', level:5 },
-  ats:         { icon:'&#128260;', name:'Main Distribution (ATS/Bus Tie)', level:5 },
-  distribution:{ icon:'&#9889;', name:'Main Distribution (Distribution Panel)', level:5 },
-  sdp:         { icon:'&#127970;', name:'Sub Distribution (SDP/Panel Gedung)', level:6 },
-  psdp:        { icon:'&#128193;', name:'Sub Distribution (PSDP/Panel Lantai)', level:6 },
-  building:    { icon:'&#127970;', name:'Gedung / Beban Akhir', level:7 },
-  equipment:   { icon:'&#9881;&#65039;', name:'Equipment / Beban Akhir', level:7 },
-};
-
-// ======================================================================
-// WARNA NODE BERDASARKAN LEVEL FUNGSIONAL (bukan berdasarkan sumber PLN/Genset asalnya)
-// LEVEL 1 Source | 2 Medium Voltage | 3 Gardu/Substation | 4 LVMDP | 5 Main Distribution | 6 Sub Distribution | 7 Equipment
-// ======================================================================
-const LEVEL_COLOR = { 1:'#2563EB', 2:'#7C3AED', 3:'#16A34A', 4:'#F97316', 5:'#EAB308', 6:'#06B6D4', 7:'#6B7280' };
-const LEVEL_NAME  = { 1:'Source', 2:'Medium Voltage', 3:'Gardu/Substation', 4:'LVMDP', 5:'Main Distribution', 6:'Sub Distribution', 7:'Equipment' };
-function levelOf(n){ return (TYPE_META[n.type] && TYPE_META[n.type].level) || 7; }
-function levelColorOf(n){ return LEVEL_COLOR[levelOf(n)]; }
-
-function tintOf(hex){
-  // Konversi warna level jadi versi pucat untuk latar ikon (badge)
-  const map = {
-    '#2563EB':'#e5edfc', '#7C3AED':'#f1e7fd', '#16A34A':'#e2f6ea', '#F97316':'#fef0e0',
-    '#EAB308':'#fdf6d6', '#06B6D4':'#dff7fb', '#6B7280':'#eef1f4',
-  };
-  return map[hex] || '#eef1f4';
-}
-
-const NODE_W = 172, NODE_H = 56, EQ_W = 130, EQ_H = 44, GAP_X = 54, GAP_Y = 24, PAD = 50;
-
-// ======================================================================
-// STATE
-// ======================================================================
-const state = {
-  activePage: 'cipaganti',
-  byId: new Map(),
-  childrenOf: new Map(),
-  collapsed: new Set(),
-  pos: new Map(),          // id -> {x,y,w,h}
-  scale: 1, panX: 80, panY: 40,
-  mode: 'normal',           // 'normal' | 'sim'
-  faultId: null,
-  status: new Map(),        // id -> normal|padam|genset
-  selectedId: null,
-  canvasW: 2000, canvasH: 1200,
-  dragging:false, dragStartX:0, dragStartY:0, panStartX:0, panStartY:0,
-  trace: null,               // {chainSet:Set, dir:'up'|'down', originId} -- persists until manually cleared
-  legendFilter: null,        // 'mv-pln'|'mv-genset'|'lv-pln'|'lv-genset'|'standby' -- persists until manually cleared
-  legendTouched: null,       // Set of node ids connected by edges matching legendFilter
-};
-
-function buildIndex(){
-  state.byId.clear();
-  state.childrenOf.clear();
-  NODES.forEach(n => state.byId.set(n.id, n));
-  NODES.forEach(n => state.childrenOf.set(n.id, []));
-  NODES.forEach(n => { if (n.parent && state.childrenOf.has(n.parent)) state.childrenOf.get(n.parent).push(n.id); });
-}
-
-// ======================================================================
-// LAYOUT: simple tree layout (post-order slot assignment), collapse-aware
-// Orientasi: KIRI -> KANAN (depth = kolom horizontal, slot = urutan vertikal)
-// ======================================================================
-function computeLayout(){
-  const cursor = { v: 0 };
-  const pos = new Map();
-  let maxDepth = 0;
-
-  function widthOf(id){ return state.byId.get(id).type === 'equipment' ? EQ_W : NODE_W; }
-  function heightOf(id){ return state.byId.get(id).type === 'equipment' ? EQ_H : NODE_H; }
-
-  function visit(id, depth){
-    maxDepth = Math.max(maxDepth, depth);
-    const kids = state.collapsed.has(id) ? [] : state.childrenOf.get(id);
-    let slot;
-    if (!kids || kids.length === 0) {
-      slot = cursor.v;
-      cursor.v += 1;
-    } else {
-      const childSlots = kids.map(k => visit(k, depth + 1));
-      slot = (Math.min(...childSlots) + Math.max(...childSlots)) / 2;
-    }
-    pos.set(id, { slot, depth });
-    return slot;
-  }
-
-  const roots = NODES.filter(n => !n.parent).map(n => n.id);
-  roots.forEach(r => visit(r, 0));
-
-  // convert slot/depth -> pixel: depth = X (kiri->kanan), slot = Y (urutan vertikal)
-  state.pos.clear();
-  pos.forEach((p, id) => {
-    const w = widthOf(id), h = heightOf(id);
-    const px = PAD + p.depth * (NODE_W + GAP_X);
-    const py = PAD + p.slot * (NODE_H + GAP_Y);
-    state.pos.set(id, { x: px, y: py, w, h });
-  });
-  state.canvasW = PAD * 2 + (maxDepth + 1) * (NODE_W + GAP_X);
-  state.canvasH = PAD * 2 + (cursor.v) * (NODE_H + GAP_Y);
-}
-
-function countHiddenDescendants(id){
-  let count = 0;
-  function walk(nid){
-    (state.childrenOf.get(nid) || []).forEach(c => { count++; walk(c); });
-  }
-  walk(id);
-  return count;
-}
-
-// ======================================================================
-// SIMULATION ENGINE: gangguan aset -> penandaan seluruh downstream
-// ======================================================================
-function runSimulation(faultId){
-  const status = new Map();
-  state.byId.forEach((n, id) => status.set(id, 'normal'));
-  if (!faultId || faultId === 'NONE') { state.status = status; return; }
-  status.set(faultId, 'padam');
-
-  function walk(id, mode){
-    (state.childrenOf.get(id) || []).forEach(childId => {
-      const child = state.byId.get(childId);
-      let childMode = mode;
-      if (mode === 'padam' && child.altParent) {
-        const altStatus = status.get(child.altParent);
-        if (altStatus !== 'padam') childMode = 'genset';
-      }
-      status.set(childId, childMode);
-      walk(childId, childMode);
-    });
-  }
-  walk(faultId, 'padam');
-  state.status = status;
-}
-
-function simulationSummary(){
-  let padam=0, genset=0, normal=0, critPadam=0, critGenset=0, nonCritPadam=0, nonCritGenset=0, totalCrit=0, totalNonCrit=0;
-  state.byId.forEach((n, id) => {
-    if (n.critical === true) totalCrit++;
-    if (n.critical === false) totalNonCrit++;
-    const s = state.status.get(id);
-    if (s === 'padam') { padam++; if (n.critical) critPadam++; else if(n.critical===false) nonCritPadam++; }
-    else if (s === 'genset') { genset++; if (n.critical) critGenset++; else if(n.critical===false) nonCritGenset++; }
-    else normal++;
-  });
-  const total = state.byId.size;
-  const impactedPct = total ? (((padam+genset)/total)*100).toFixed(1) : '0.0';
-  return { padam, genset, normal, critPadam, critGenset, nonCritPadam, nonCritGenset, totalCrit, totalNonCrit, total, impactedPct };
-}
-
-// ======================================================================
-// RENDER: nodes
-// ======================================================================
-function isVisible(id){
-  let cur = state.byId.get(id);
-  let guard = 0;
-  while (cur && cur.parent && guard < 40) {
-    if (state.collapsed.has(cur.parent)) return false;
-    cur = state.byId.get(cur.parent);
-    guard++;
-  }
-  return true;
-}
-
-function statusOf(id){
-  if (state.mode !== 'sim') return 'normal';
-  return state.status.get(id) || 'normal';
-}
-
-function renderNodes(){
-  const layer = document.getElementById('nodesLayer');
-  layer.innerHTML = '';
-  NODES.forEach(n => {
-    if (!isVisible(n.id)) return;
-    const p = state.pos.get(n.id);
-    if (!p) return;
-    const div = document.createElement('div');
-    div.className = 'node';
-    div.dataset.type = n.type;
-    div.dataset.id = n.id;
-    div.style.left = p.x + 'px';
-    div.style.top = p.y + 'px';
-    div.style.width = p.w + 'px';
-    div.style.minHeight = p.h + 'px';
-
-    const st = statusOf(n.id);
-    const branchColor = levelColorOf(n);
-    let badgeBg = tintOf(branchColor);
-    let cardColor = branchColor;
-    if (state.mode === 'sim') {
-      if (st === 'padam') { cardColor = '#ef4444'; badgeBg = '#fbd0d0'; div.classList.add('sim-padam'); }
-      else if (st === 'genset') { cardColor = '#f59e0b'; badgeBg = '#fde3ae'; div.classList.add('sim-genset'); }
-    }
-    div.style.setProperty('--type-color', cardColor);
-    if (n.id === state.selectedId) div.classList.add('selected');
-    if (state.trace) {
-      if (state.trace.chainSet.has(n.id)) div.classList.add('traced');
-      else div.classList.add('dim');
-    }
-    if (state.legendTouched) {
-      if (state.legendTouched.has(n.id)) div.classList.add('traced');
-      else div.classList.add('dim');
-    }
-
-    const meta = TYPE_META[n.type] || { icon:'&#9679;' };
-    let html = '<div class="row1"><div class="badge" style="background:'+badgeBg+'">'+meta.icon+'</div>' +
-               '<div class="name">'+n.name+'</div></div>';
-    if (n.capacity) html += '<div class="meta">'+n.capacity+'</div>';
-    else if (n.type!=='equipment') html += '<div class="meta">'+(n.supply||'')+(n.voltage? (' &middot; '+n.voltage):'')+'</div>';
-    div.innerHTML = html;
-
-    if (state.mode === 'sim') {
-      const dot = document.createElement('div');
-      dot.className = 'statusdot ' + (st === 'padam' ? 'padam' : st === 'genset' ? 'genset' : '');
-      div.appendChild(dot);
-    }
-    if (n.verified === false) {
-      const flag = document.createElement('div');
-      flag.className = 'flag';
-      flag.title = 'Memerlukan verifikasi lapangan';
-      flag.textContent = '!';
-      div.appendChild(flag);
-    }
-    const kids = state.childrenOf.get(n.id) || [];
-    if (kids.length) {
-      const tag = document.createElement('div');
-      tag.className = 'collapseTag';
-      tag.textContent = state.collapsed.has(n.id) ? ('+ ' + countHiddenDescendants(n.id)) : '\u2212';
-      tag.title = state.collapsed.has(n.id) ? 'Perluas' : 'Ciutkan';
-      tag.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (state.collapsed.has(n.id)) state.collapsed.delete(n.id); else state.collapsed.add(n.id);
-        computeLayout(); renderAll();
-      });
-      div.appendChild(tag);
-    }
-
-    div.addEventListener('click', () => selectNode(n.id));
-    layer.appendChild(div);
-  });
-}
-
-// ======================================================================
-// RENDER: edges (SVG elbow connectors)
-// ======================================================================
-function edgeColor(child){
-  if (child.voltage === 'MV') return child.supply === 'Genset' ? '#8B5CF6' : '#2563EB';
-  return child.supply === 'Genset' ? '#F97316' : '#16A34A';
-}
-const EDGE_STANDBY_COLOR = '#ABAFB7';
-
-// Kategori jalur kabel sesuai Legenda -- dipakai untuk fitur "klik legenda untuk menyorot jalur"
-function edgeCategory(child, isAlt){
-  if (isAlt) return 'standby';
-  return (child.voltage === 'MV' ? 'mv' : 'lv') + '-' + (child.supply === 'Genset' ? 'genset' : 'pln');
-}
-
-function computeLegendTouched(filterKey){
-  const touched = new Set();
-  NODES.forEach(n => {
-    if (n.parent && edgeCategory(n, false) === filterKey) { touched.add(n.id); touched.add(n.parent); }
-    if (n.altParent && edgeCategory(n, true) === filterKey) { touched.add(n.id); touched.add(n.altParent); }
-  });
-  return touched;
-}
-
-function renderEdges(){
-  const svg = document.getElementById('edgesSvg');
-  svg.setAttribute('width', state.canvasW);
-  svg.setAttribute('height', state.canvasH);
-  svg.setAttribute('viewBox', '0 0 ' + state.canvasW + ' ' + state.canvasH);
-  let paths = '';
-
-  // Elbow kiri->kanan: keluar dari sisi kanan parent, masuk ke sisi kiri child
-  function elbow(x1,y1,x2,y2){
-    const midX = x1 + (x2 - x1) * 0.55;
-    return 'M '+x1+' '+y1+' L '+midX+' '+y1+' L '+midX+' '+y2+' L '+x2+' '+y2;
-  }
-
-  const trace = state.trace;
-  const legendFilter = state.legendFilter;
-
-  NODES.forEach(n => {
-    if (!isVisible(n.id)) return;
-    const cp = state.pos.get(n.id);
-    if (!cp) return;
-
-    if (n.parent && isVisible(n.parent) && state.pos.get(n.parent)) {
-      const pp = state.pos.get(n.parent);
-      const x1 = pp.x + pp.w, y1 = pp.y + pp.h/2;
-      const x2 = cp.x, y2 = cp.y + cp.h/2;
-      let color = edgeColor(n), width = 2.2, dash = '5,4', opacity = 0.9, cls = '';
-      if (state.mode === 'sim') {
-        const st = statusOf(n.id);
-        if (st === 'padam') { color = '#ef4444'; width = 3.4; dash='7,3'; opacity = 1; cls = ' class="edge-sim-padam"'; }
-        else if (st === 'genset') {
-          if (n.altParent) { color = EDGE_STANDBY_COLOR; opacity = 0.35; dash='3,5'; } // segmen ini terputus, dialihkan lewat jalur backup
-          else { color = '#f59e0b'; width = 2.8; opacity = 0.9; dash='6,3'; } // segmen ini ikut teraliri listrik dari genset (di hilir titik alih-daya)
-        }
-      }
-      if (legendFilter) {
-        const cat = edgeCategory(n, false);
-        if (cat === legendFilter) { width = 3.6; opacity = 1; cls = ' class="edge-legend-active"'; }
-        else { opacity = 0.08; cls = ''; }
-      }
-      const isTraced = trace && trace.chainSet.has(n.id) && trace.chainSet.has(n.parent);
-      if (isTraced) { color = '#0891b2'; width = 3.2; opacity = 1; dash='6,4'; cls = ' class="edge-traced"'; }
-      paths += '<path d="'+elbow(x1,y1,x2,y2)+'" stroke="'+color+'" stroke-width="'+width+'" fill="none" stroke-dasharray="'+dash+'" opacity="'+opacity+'"'+cls+'/>';
-    }
-    if (n.altParent && state.byId.has(n.altParent)) {
-      const ap = state.pos.get(n.altParent);
-      if (ap && isVisible(n.altParent)) {
-        const x1 = ap.x + ap.w, y1 = ap.y + ap.h/2;
-        const x2 = cp.x, y2 = cp.y + cp.h/2;
-        let color = EDGE_STANDBY_COLOR, width = 1.8, dash='2,4', opacity = 0.6, cls = '';
-        if (state.mode === 'sim' && statusOf(n.id) === 'genset') { color = '#f59e0b'; width = 3.4; opacity = 1; dash='7,3'; cls = ' class="edge-sim-genset"'; }
-        if (legendFilter) {
-          const cat = edgeCategory(n, true);
-          if (cat === legendFilter) { color = EDGE_STANDBY_COLOR; width = 3.6; opacity = 1; cls = ' class="edge-legend-active"'; }
-          else { opacity = 0.08; cls = ''; }
-        }
-        const isTraced = trace && trace.chainSet.has(n.id) && trace.chainSet.has(n.altParent);
-        if (isTraced) { color = '#0891b2'; width = 3.2; opacity = 1; dash='6,4'; cls = ' class="edge-traced"'; }
-        paths += '<path d="M '+x1+' '+y1+' C '+(x1+36)+' '+y1+', '+(x2-36)+' '+y2+', '+x2+' '+y2+'" stroke="'+color+'" stroke-width="'+width+'" fill="none" stroke-dasharray="'+dash+'"'+cls+' opacity="'+opacity+'"/>';
-      }
-    }
-  });
-  svg.innerHTML = paths;
-}
-
-// ======================================================================
-// PAN / ZOOM
-// ======================================================================
-function applyTransform(){
-  document.getElementById('viewport').style.transform =
-    'translate('+state.panX+'px,'+state.panY+'px) scale('+state.scale+')';
-}
-function fitToScreen(){
-  const wrap = document.getElementById('canvasWrap');
-  const availW = wrap.clientWidth - 40, availH = wrap.clientHeight - 40;
-  const s = Math.min(availW / state.canvasW, availH / state.canvasH, 1.1);
-  state.scale = Math.max(s, 0.18);
-  state.panX = (wrap.clientWidth - state.canvasW * state.scale) / 2;
-  state.panY = 30;
-  applyTransform();
-  renderMinimap();
-}
-
-// ======================================================================
-// SELECTION / ASSET INFO
-// ======================================================================
-function buildingOf(n){
-  const src = (n.note||'') + ' ' + n.name;
-  const m = src.match(/Gedung\s?\d+[A-Za-z]?/i) || src.match(/Gd\.?\s?\d+[A-Za-z]?/i);
-  if (m) return m[0].replace(/^Gd\.?/i,'Gedung ');
-  if (n.name.match(/Gardu|Power House/i)) return n.name;
-  return '-';
-}
-
-function selectNode(id){
-  state.selectedId = id;
-  renderNodes();
-  const n = state.byId.get(id);
-  const parentName = n.parent ? state.byId.get(n.parent).name : '-';
-  const altName = n.altParent ? state.byId.get(n.altParent).name : null;
-  const kids = (state.childrenOf.get(id) || []).map(c => state.byId.get(c).name);
-  const st = statusOf(id);
-  const stLabel = st === 'padam' ? 'Padam / Mati Listrik' : st === 'genset' ? 'Menyala Pakai Genset' : 'Menyala Normal';
-  const stColor = st === 'padam' ? '#ef4444' : st === 'genset' ? '#f59e0b' : '#22c55e';
-
-  let html = '';
-  html += kvRow('Nama Aset', n.name);
-  html += '<div class="kv"><span class="k">Level</span><span class="v"><span class="badgechip" style="background:'+levelColorOf(n)+'22;color:'+levelColorOf(n)+'">Level '+levelOf(n)+' &middot; '+LEVEL_NAME[levelOf(n)]+'</span></span></div>';
-  html += kvRow('Halaman Sumber', PAGE_DEFINITIONS[state.activePage].label);
-  html += kvRow('Cabang', n.branchNos && n.branchNos.length ? n.branchNos.map(x=>'Cabang '+x).join(', ') : 'Pusat');
-  html += kvRow('Jenis Aset', (TYPE_META[n.type]||{}).name || n.type);
-  html += kvRow('Lokasi / Gedung', buildingOf(n));
-  html += kvRow('Incoming', parentName + (altName? (' + backup: '+altName) : ''));
-  html += kvRow('Outgoing', kids.length ? (kids.length+' panel turunan') : 'Beban akhir (leaf)');
-  html += kvRow('Sumber', (n.supply||'-') + (n.voltage? (' &middot; '+n.voltage):''));
-  html += kvRow('Panel Parent', parentName);
-  html += kvRow('Panel Child', kids.slice(0,4).join(', ') + (kids.length>4? ', ...':'') || '-');
-  html += '<div class="kv"><span class="k">Status</span><span class="v"><span class="badgechip" style="background:'+stColor+'22;color:'+stColor+'">'+stLabel+'</span></span></div>';
-  if (n.note) html += '<div style="font-size:11px;color:var(--text-2);margin-top:8px;line-height:1.5;">'+n.note+'</div>';
-  if (n.verified === false) html += '<div class="warnflag">&#9888; Data titik ini belum sepenuhnya pasti pada dokumen penyederhanaan &mdash; cocokkan dengan SLD utama atau verifikasi langsung di lapangan.</div>';
-
-  const upActive = state.trace && state.trace.dir==='up' && state.trace.originId===id;
-  const downActive = state.trace && state.trace.dir==='down' && state.trace.originId===id;
-  html += '<button class="mini-btn'+(upActive?' active-trace':'')+'" id="btnTraceUp">'+(upActive? '&#9632; Hentikan Trace Upstream' : '&#8593; Trace Upstream (ke Sumber Listrik)')+'</button>';
-  html += '<button class="mini-btn'+(downActive?' active-trace':'')+'" id="btnTraceDown">'+(downActive? '&#9632; Hentikan Trace Downstream' : '&#8595; Trace Downstream (Semua Panel di Bawahnya)')+'</button>';
-  html += '<button class="mini-btn secondary" id="btnSimHere">&#9889; Simulasikan Gangguan di Panel Ini</button>';
-
-  document.getElementById('assetBody').innerHTML = html;
-  document.getElementById('btnTraceUp').onclick = () => traceUpstream(id);
-  document.getElementById('btnTraceDown').onclick = () => traceDownstream(id);
-  document.getElementById('btnSimHere').onclick = () => {
-    state.mode = 'sim'; state.faultId = id;
-    document.getElementById('scenarioSel').value = SCENARIOS.find(s=>s.id===id) ? id : 'NONE';
-    setModeUI();
-    runSimulation(id);
-    renderAll();
-    showSimPanel();
-  };
-  panToNode(id);
-}
-
-function kvRow(k, v){
-  return '<div class="kv"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';
-}
-
-function setTrace(chain, dir, originId){
-  state.trace = { chainSet: new Set(chain), dir, originId };
-  if (state.legendFilter) {
-    state.legendFilter = null;
-    document.querySelectorAll('.legend-clickable').forEach(r => r.classList.remove('active'));
-  }
-  updateTraceBanner();
-  renderAll();
-}
-function clearTrace(){
-  state.trace = null;
-  updateTraceBanner();
-  renderAll();
-  if (state.selectedId) selectNode(state.selectedId);
-}
-function updateSpotlightBanner(){
-  const banner = document.getElementById('traceBanner');
-  if (state.trace) {
-    const n = state.byId.get(state.trace.originId);
-    const dirLabel = state.trace.dir === 'up' ? 'Upstream (ke sumber)' : 'Downstream (ke beban)';
-    document.getElementById('traceBannerText').innerHTML = '<span class="blinkdot"></span>Penyorotan aktif: <b>'+dirLabel+'</b> dari <b>'+n.name+'</b>';
-    banner.style.display = 'flex';
-  } else if (state.legendFilter) {
-    document.getElementById('traceBannerText').innerHTML = '<span class="blinkdot"></span>Menyorot jalur: <b>'+LEGEND_LABELS[state.legendFilter]+'</b>';
-    banner.style.display = 'flex';
-  } else {
-    banner.style.display = 'none';
-  }
-}
-// alias lama, tetap dipakai di beberapa tempat
-function updateTraceBanner(){ updateSpotlightBanner(); }
-
-// Upstream: dari panel yang dipilih naik terus sampai ke Sumber Listrik (PLN/Genset)
-function traceUpstream(id){
-  if (state.trace && state.trace.dir==='up' && state.trace.originId===id) { clearTrace(); return; }
-  const chain = [];
-  let cur = state.byId.get(id);
-  let guard = 0;
-  while (cur) { chain.push(cur.id); if (!cur.parent) break; cur = state.byId.get(cur.parent); guard++; if(guard>40) break; }
-  setTrace(chain, 'up', id);
-  selectNode(id);
-}
-
-// Downstream: dari panel yang dipilih (atau dari Sumber Listrik) turun ke semua panel/beban di bawahnya
-function traceDownstream(id){
-  if (state.trace && state.trace.dir==='down' && state.trace.originId===id) { clearTrace(); return; }
-  const chain = [id];
-  let changed = false;
-  function walk(nid){
-    if (state.collapsed.has(nid)) { state.collapsed.delete(nid); changed = true; }
-    (state.childrenOf.get(nid) || []).forEach(c => { chain.push(c); walk(c); });
-  }
-  walk(id);
-  if (changed) computeLayout();
-  setTrace(chain, 'down', id);
-  selectNode(id);
-}
-
-function panToNode(id){
-  const p = state.pos.get(id);
-  if (!p) return;
-  const wrap = document.getElementById('canvasWrap');
-  state.panX = wrap.clientWidth/2 - (p.x + p.w/2) * state.scale;
-  state.panY = wrap.clientHeight/2 - (p.y + p.h/2) * state.scale;
-  applyTransform();
-  renderMinimap();
-}
-
-// ======================================================================
-// SIMULATION SIDEBAR PANEL
-// ======================================================================
-function showSimPanel(){
-  document.getElementById('simResultPanel').style.display = 'block';
-  const sc = SCENARIOS.find(s => s.id === state.faultId);
-  const label = sc ? sc.label : (state.byId.get(state.faultId)? ('Gangguan di ' + state.byId.get(state.faultId).name) : '-');
-  const s = simulationSummary();
-  let html = '';
-  html += '<div class="kv"><span class="k">Skenario</span><span class="v" style="color:#fca5a5;">'+label+'</span></div>';
-  html += '<div style="margin-top:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);">Ringkasan Dampak</div>';
-  html += impactRow('#ef4444','Padam / Mati Listrik', s.padam);
-  html += impactRow('#f59e0b','Menyala Pakai Genset', s.genset);
-  html += impactRow('#22c55e','Menyala Normal', s.normal);
-  html += '<div class="kv" style="margin-top:6px;"><span class="k">Total Beban Terdampak</span><span class="v">'+s.impactedPct+' %</span></div>';
-
-  if (s.totalCrit || s.totalNonCrit) {
-    const critPct = s.totalCrit ? (((s.critPadam+s.critGenset)/s.totalCrit)*100).toFixed(0) : 0;
-    const nonCritPct = s.totalNonCrit ? (((s.nonCritPadam+s.nonCritGenset)/s.totalNonCrit)*100).toFixed(0) : 0;
-    html += '<div style="margin-top:10px;font-size:11px;">Beban Kritikal Terdampak <b>'+(s.critPadam+s.critGenset)+' / '+s.totalCrit+'</b> ('+critPct+'%)</div>';
-    html += '<div class="bar"><div style="width:'+critPct+'%;background:#ef4444;"></div></div>';
-    html += '<div style="margin-top:8px;font-size:11px;">Beban Non-Kritikal Terdampak <b>'+(s.nonCritPadam+s.nonCritGenset)+' / '+s.totalNonCrit+'</b> ('+nonCritPct+'%)</div>';
-    html += '<div class="bar"><div style="width:'+nonCritPct+'%;background:#f59e0b;"></div></div>';
-  }
-
-  // Affected list (detail)
-  const affected = [];
-  state.byId.forEach((n,id) => { const st = state.status.get(id); if (st==='padam'||st==='genset') affected.push({n,st}); });
-  html += '<div class="notelist" style="margin-top:12px;">';
-  affected.slice(0,60).forEach(a => {
-    const c = a.st==='padam' ? '#ef4444' : '#f59e0b';
-    html += '<div><span class="dot" style="background:'+c+';display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;"></span>'+a.n.name+' <span style="color:var(--text-2);">('+(a.st==='padam'?'mati listrik':'pakai genset')+')</span></div>';
-  });
-  html += '</div>';
-
-  document.getElementById('simBody').innerHTML = html;
-}
-function impactRow(color,label,val){
-  return '<div class="impact-row"><span><span class="dot" style="background:'+color+'"></span>'+label+'</span><b>'+val+' Panel</b></div>';
-}
-
-// ======================================================================
-// MINIMAP
-// ======================================================================
-function renderMinimap(){
-  const cv = document.getElementById('minimapCanvas');
-  const ctx = cv.getContext && cv.getContext('2d');
-  if (!ctx) return;
-  const w = cv.clientWidth || 200, h = 110;
-  cv.width = w; cv.height = h;
-  ctx.clearRect(0,0,w,h);
-  const sx = w / state.canvasW, sy = h / state.canvasH;
-  const s = Math.min(sx, sy);
-  const offX = (w - state.canvasW*s)/2, offY = (h - state.canvasH*s)/2;
-
-  NODES.forEach(n => {
-    if (!isVisible(n.id)) return;
-    const p = state.pos.get(n.id);
-    if (!p) return;
-    let color = levelColorOf(n);
-    if (state.mode==='sim') {
-      const st = statusOf(n.id);
-      if (st==='padam') color = '#ef4444'; else if (st==='genset') color = '#f59e0b';
-    }
-    ctx.fillStyle = color;
-    ctx.fillRect(offX + p.x*s, offY + p.y*s, Math.max(2,p.w*s), Math.max(2,p.h*s));
-  });
-
-  // viewport box
-  const wrap = document.getElementById('canvasWrap');
-  const vx = -state.panX/state.scale, vy = -state.panY/state.scale;
-  const vw = wrap.clientWidth/state.scale, vh = wrap.clientHeight/state.scale;
-  ctx.strokeStyle = '#eef3fa'; ctx.lineWidth = 1.2;
-  ctx.strokeRect(offX+vx*s, offY+vy*s, vw*s, vh*s);
-}
-
-// ======================================================================
-// STATS BAR
-// ======================================================================
-function renderStats(){
-  const count = (fn) => NODES.filter(fn).length;
-  const branchCount = new Set(PAGE_DEFINITIONS[state.activePage].routes.map(r=>r.no)).size;
-  const items = [
-    { icon:'&#9889;', label:'Level 1 &middot; Source', val: count(n=>levelOf(n)===1), color:LEVEL_COLOR[1] },
-    { icon:'&#128268;', label:'Level 2 &middot; Medium Voltage', val: count(n=>levelOf(n)===2), color:LEVEL_COLOR[2] },
-    { icon:'&#127981;', label:'Level 3 &middot; Gardu/Substation', val: count(n=>levelOf(n)===3), color:LEVEL_COLOR[3] },
-    { icon:'&#128230;', label:'Level 4 &middot; LVMDP/Flywheel', val: count(n=>levelOf(n)===4), color:LEVEL_COLOR[4] },
-    { icon:'&#128737;&#65039;', label:'Level 5 &middot; Main Distribution', val: count(n=>levelOf(n)===5), color:LEVEL_COLOR[5] },
-    { icon:'&#127970;', label:'Level 6 &middot; Sub Distribution', val: count(n=>levelOf(n)===6), color:LEVEL_COLOR[6] },
-    { icon:'&#9881;&#65039;', label:'Level 7 &middot; Gedung/Beban', val: count(n=>levelOf(n)===7), color:LEVEL_COLOR[7] },
-    { icon:'&#8644;', label:'Jumlah Cabang', val: branchCount, color:'#0891b2' },
-    { icon:'&#128230;', label:'Total Aset Halaman', val: NODES.length, color:'#64748b' },
-    { icon:'&#9888;&#65039;', label:'Perlu Verifikasi', val: count(n=>n.verified===false), color:'#f59e0b' },
-  ];
-  document.getElementById('statsbar').innerHTML = items.map(it =>
-    '<div class="stat"><div class="si" style="background:'+it.color+'22;color:'+it.color+'">'+it.icon+'</div>' +
-    '<div><div class="sl">'+it.label+'</div><div class="sv">'+it.val+'</div></div></div>'
-  ).join('');
-}
-
-// ======================================================================
-// SEARCH
-// ======================================================================
-function setupSearch(){
-  const input = document.getElementById('searchInput');
-  const results = document.getElementById('searchResults');
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
-    if (!q) { results.style.display='none'; return; }
-    const matches = NODES.filter(n => n.name.toLowerCase().includes(q) || n.id.toLowerCase().includes(q)).slice(0,12);
-    if (!matches.length) { results.innerHTML = '<div>Tidak ditemukan</div>'; results.style.display='block'; return; }
-    results.innerHTML = matches.map(n => '<div data-id="'+n.id+'"><b>'+n.name+'</b> &middot; '+(TYPE_META[n.type]||{}).name+'</div>').join('');
-    results.style.display = 'block';
-    results.querySelectorAll('div[data-id]').forEach(el => {
-      el.addEventListener('click', () => {
-        const id = el.dataset.id;
-        expandAncestors(id);
-        computeLayout(); renderAll();
-        selectNode(id);
-        results.style.display = 'none';
-        input.value = state.byId.get(id).name;
-      });
-    });
-  });
-  document.addEventListener('click', (e) => { if (!e.target.closest('#searchWrap')) results.style.display='none'; });
-}
-function expandAncestors(id){
-  let cur = state.byId.get(id);
-  while (cur && cur.parent) { state.collapsed.delete(cur.parent); cur = state.byId.get(cur.parent); }
-}
-
-// ======================================================================
-// PAN / ZOOM INTERACTION
-// ======================================================================
-function setupPanZoom(){
-  const wrap = document.getElementById('canvasWrap');
-  wrap.addEventListener('mousedown', (e) => {
-    if (e.target.closest('.node')) return;
-    state.dragging = true;
-    state.dragStartX = e.clientX; state.dragStartY = e.clientY;
-    state.panStartX = state.panX; state.panStartY = state.panY;
-    wrap.style.cursor = 'grabbing';
-  });
-  window.addEventListener('mousemove', (e) => {
-    if (!state.dragging) return;
-    state.panX = state.panStartX + (e.clientX - state.dragStartX);
-    state.panY = state.panStartY + (e.clientY - state.dragStartY);
-    applyTransform();
-  });
-  window.addEventListener('mouseup', () => { state.dragging=false; wrap.style.cursor='default'; renderMinimap(); });
-
-  wrap.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const rect = wrap.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const worldX = (mx - state.panX)/state.scale, worldY = (my - state.panY)/state.scale;
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    state.scale = Math.min(2.2, Math.max(0.15, state.scale*delta));
-    state.panX = mx - worldX*state.scale;
-    state.panY = my - worldY*state.scale;
-    applyTransform();
-    renderMinimap();
-  }, { passive:false });
-
-  document.getElementById('zoomIn').onclick = () => { state.scale = Math.min(2.2, state.scale*1.2); applyTransform(); renderMinimap(); };
-  document.getElementById('zoomOut').onclick = () => { state.scale = Math.max(0.15, state.scale*0.8); applyTransform(); renderMinimap(); };
-  document.getElementById('zoomFit').onclick = fitToScreen;
-  document.getElementById('btnDownload').onclick = () => window.print();
-
-  document.getElementById('minimapCanvas').addEventListener('click', (e) => {
-    const cv = e.target;
-    const rect = cv.getBoundingClientRect();
-    const s = Math.min(cv.clientWidth/state.canvasW, 110/state.canvasH);
-    const offX = (cv.clientWidth - state.canvasW*s)/2, offY = (110 - state.canvasH*s)/2;
-    const wx = (e.clientX - rect.left - offX)/s, wy = (e.clientY - rect.top - offY)/s;
-    const wrap2 = document.getElementById('canvasWrap');
-    state.panX = wrap2.clientWidth/2 - wx*state.scale;
-    state.panY = wrap2.clientHeight/2 - wy*state.scale;
-    applyTransform(); renderMinimap();
-  });
-}
-
-
-// ======================================================================
-// SOURCE PAGE NAVIGATION
-// ======================================================================
-function refreshScenarioOptions(){
-  const sel = document.getElementById('scenarioSel');
-  if (!sel) return;
-  sel.innerHTML = SCENARIOS.map(s => '<option value="'+s.id+'">'+s.label+'</option>').join('');
-  sel.value = 'NONE';
-}
-
-function updateSourcePageUI(){
-  const page = PAGE_DEFINITIONS[state.activePage];
-  document.querySelectorAll('.source-tab').forEach(btn => btn.classList.toggle('active', btn.dataset.page === state.activePage));
-  const branchCount = new Set(page.routes.map(r=>r.no)).size;
-  document.getElementById('sourcePageMeta').textContent = branchCount + ' cabang Â· ' + NODES.length + ' aset Â· halaman aktif: ' + page.label;
-  document.getElementById('brandSubtitle').innerHTML = 'PT Bio Farma (Persero) &middot; Halaman aktif: ' + page.label;
-  document.getElementById('aboutDataBody').innerHTML =
-    'Halaman ini menampilkan <b>'+page.label+'</b> berdasarkan dokumen <b>Penyederhanaan SLD</b>. ' +
-    'Data dibagi menjadi '+branchCount+' cabang dan dibaca dari kiri ke kanan. ' +
-    'Ejaan yang jelas dinormalisasi, antara lain <i>Flywhell</i> menjadi <i>Flywheel</i>, <i>Compresor/Composer</i> menjadi <i>Compressor</i>, dan <i>Substaton</i> menjadi <i>Substation</i>. ' +
-    'Aset bertanda <span style="color:#b45309;font-weight:800;">&#9888;</span> masih memerlukan konfirmasi terhadap SLD utama atau pemeriksaan lapangan.';
-  document.title = page.label + ' | Interactive Electrical Distribution Mapping Bio Farma';
-}
-
-function activateSourcePage(pageKey, shouldFit=true){
-  if (!PAGE_DEFINITIONS[pageKey]) return;
-  state.activePage = pageKey;
-  NODES = buildNodesForPage(pageKey);
-  SCENARIOS = buildScenariosForPage(NODES);
-  state.collapsed.clear();
-  state.pos.clear();
-  state.selectedId = null;
-  state.trace = null;
-  state.legendFilter = null;
-  state.legendTouched = null;
-  state.mode = 'normal';
-  state.faultId = null;
-  buildIndex();
-  computeLayout();
-  runSimulation(null);
-  refreshScenarioOptions();
-  setModeUI();
-  document.getElementById('simResultPanel').style.display = 'none';
-  document.getElementById('assetBody').innerHTML = '<div class="emptystate">Klik salah satu aset pada kanvas untuk menampilkan sumber, cabang, incoming, outgoing, dan status verifikasinya.</div>';
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchResults').style.display = 'none';
-  document.querySelectorAll('.legend-clickable').forEach(r => r.classList.remove('active'));
-  updateSpotlightBanner();
-  updateSourcePageUI();
-  renderAll();
-  if (shouldFit) requestAnimationFrame(fitToScreen);
-}
-
-function setupSourcePages(){
-  const tabs = document.getElementById('sourceTabs');
-  tabs.innerHTML = PAGE_ORDER.map(key => '<button class="source-tab" data-page="'+key+'">'+PAGE_DEFINITIONS[key].shortLabel+'</button>').join('');
-  tabs.querySelectorAll('.source-tab').forEach(btn => btn.addEventListener('click', () => activateSourcePage(btn.dataset.page, true)));
-}
-
-// ======================================================================
-// MODE / SCENARIO UI
-// ======================================================================
-function setupModeUI(){
-  document.querySelectorAll('#modeToggle button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.mode = btn.dataset.mode;
-      setModeUI();
-      if (state.mode === 'sim') {
-        if (!state.faultId) state.faultId = document.getElementById('scenarioSel').value !== 'NONE' ? document.getElementById('scenarioSel').value : null;
-        runSimulation(state.faultId);
-        if (state.faultId) showSimPanel(); else document.getElementById('simResultPanel').style.display='none';
-      } else {
-        document.getElementById('simResultPanel').style.display = 'none';
-      }
-      renderAll();
-    });
-  });
-
-  const sel = document.getElementById('scenarioSel');
-  refreshScenarioOptions();
-  sel.addEventListener('change', () => {
-    state.faultId = sel.value === 'NONE' ? null : sel.value;
-    state.mode = state.faultId ? 'sim' : 'normal';
-    setModeUI();
-    runSimulation(state.faultId);
-    if (state.faultId) showSimPanel(); else document.getElementById('simResultPanel').style.display='none';
-    renderAll();
-  });
-
-  document.getElementById('btnRefresh').onclick = () => {
-    state.mode = 'normal'; state.faultId = null; sel.value='NONE';
-    setModeUI();
-    runSimulation(null);
-    document.getElementById('simResultPanel').style.display='none';
-    clearTrace();
-  };
-  document.getElementById('closeSim').onclick = () => { document.getElementById('simResultPanel').style.display='none'; };
-  document.getElementById('btnFullscreen').onclick = () => {
-    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
-    else document.exitFullscreen();
-  };
-}
-
-function setupHelp(){
-  const overlay = document.getElementById('helpOverlay');
-  document.getElementById('btnHelp').onclick = () => overlay.classList.add('open');
-  document.getElementById('closeHelp').onclick = () => overlay.classList.remove('open');
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') overlay.classList.remove('open'); });
-}
-function setupTraceBanner(){
-  document.getElementById('traceBannerStop').onclick = () => {
-    if (state.trace) { clearTrace(); return; }
-    if (state.legendFilter) {
-      state.legendFilter = null;
-      document.querySelectorAll('.legend-clickable').forEach(r => r.classList.remove('active'));
-      updateSpotlightBanner();
-      renderAll();
-    }
-  };
-}
-function renderLevelLegend(){
-  const body = document.getElementById('levelLegendBody');
-  let html = '';
-  for (let lvl = 1; lvl <= 7; lvl++) {
-    html += '<div class="legend-row"><span class="legend-swatch" style="background:'+LEVEL_COLOR[lvl]+'"></span>Level '+lvl+' &middot; '+LEVEL_NAME[lvl]+'</div>';
-  }
-  body.innerHTML = html;
-}
-
-function setupFloatPanelToggles(){
-  document.querySelectorAll('.hideBtn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const card = document.getElementById(btn.dataset.target);
-      const collapsed = card.classList.toggle('collapsed');
-      btn.innerHTML = collapsed ? '&#43;' : '&#8722;';
-      btn.title = collapsed ? 'Tampilkan' : 'Sembunyikan';
-    });
-  });
-}
-
-const LEGEND_LABELS = {
-  'mv-pln':'Kabel Tegangan Menengah dari PLN',
-  'mv-genset':'Kabel Tegangan Menengah dari Genset',
-  'lv-pln':'Kabel Tegangan Rendah dari PLN',
-  'lv-genset':'Kabel Tegangan Rendah dari Genset',
-  'standby':'Jalur Cadangan (Standby)',
-};
-function setupLegendFilter(){
-  document.querySelectorAll('.legend-clickable').forEach(row => {
-    row.addEventListener('click', () => {
-      const key = row.dataset.filter;
-      if (state.legendFilter === key) {
-        state.legendFilter = null;
-      } else {
-        state.trace = null; // hindari dua jenis penyorotan tumpang tindih di kanvas
-        state.legendFilter = key;
-      }
-      document.querySelectorAll('.legend-clickable').forEach(r => r.classList.toggle('active', r.dataset.filter === state.legendFilter));
-      updateSpotlightBanner();
-      renderAll();
-    });
-  });
-}
-function setModeUI(){
-  document.querySelectorAll('#modeToggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === state.mode));
-}
-
-// ======================================================================
-// MASTER RENDER
-// ======================================================================
-function renderAll(){
-  state.legendTouched = state.legendFilter ? computeLegendTouched(state.legendFilter) : null;
-  renderNodes();
-  renderEdges();
-  renderStats();
-  renderMinimap();
-}
-
-// ======================================================================
-// INIT
-// ======================================================================
-function init(){
-  NODES = buildNodesForPage(state.activePage);
-  SCENARIOS = buildScenariosForPage(NODES);
-  buildIndex();
-  computeLayout();
-  runSimulation(null);
-  setupSearch();
-  setupPanZoom();
-  setupModeUI();
-  setupHelp();
-  setupTraceBanner();
-  setupFloatPanelToggles();
-  setupLegendFilter();
-  setupSourcePages();
-  renderLevelLegend();
-  updateSourcePageUI();
-  renderAll();
-  window.addEventListener('resize', () => { renderMinimap(); });
-  requestAnimationFrame(fitToScreen);
-}
-init();
-</script>
+  <!-- ================= MODAL PASTE TREE NODE ================= -->
+  <div class="modal-overlay" id="pasteModal">
+    <div class="modal-box" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3>Paste Sub-Tree Node</h3>
+        <button class="close-btn" id="btnClosePasteModalHeader">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 12px; color: var(--text-1); margin: 0 0 10px 0;">Pilih parent node tujuan untuk menempelkan struktur cabang node yang disalin:</p>
+        <div class="form-group">
+          <label for="pasteParentSelect">Target Parent Node</label>
+          <select id="pasteParentSelect"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="mini-btn secondary" id="btnCancelPaste" style="width: auto; margin: 0;">Batal</button>
+        <button class="mini-btn success" id="btnConfirmPaste" style="width: auto; margin: 0;">Tempel (Paste) Disini</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL BANTUAN / FAQ ================= -->
+  <div class="modal-overlay" id="helpOverlay">
+    <div class="modal-box" style="max-width: 540px;">
+      <div class="modal-header">
+        <h3>Panduan & Petunjuk Penggunaan</h3>
+        <button class="close-btn" id="closeHelpHeader">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 12px; line-height: 1.6; color: var(--text-1);">
+        <h4 style="margin: 0 0 4px 0; color: var(--text-0);">Navigasi Kanvas</h4>
+        <ul style="padding-left: 18px; margin-top: 4px;">
+          <li><b>Pan (Geser Canvas):</b> Klik dan tahan area kosong di kanvas lalu seret (drag).</li>
+          <li><b>Zoom (Perbesar/Perkecil):</b> Gunakan scroll mouse atau tombol (+ / &minus;) di pojok kiri bawah.</li>
+        </ul>
+        <h4 style="margin: 12px 0 4px 0; color: var(--text-0);">Mode Aplikasi (View vs Editor)</h4>
+        <ul style="padding-left: 18px; margin-top: 4px;">
+          <li><b>View Mode:</b> Hanya dapat melihat diagram, tracing jalur, dan melakukan simulasi padam.</li>
+          <li><b>Editor Mode:</b> Menambah node baru, mengedit node, menghapus cabang, serta mengopi/menempel cabang.</li>
+        </ul>
+        <h4 style="margin: 12px 0 4px 0; color: var(--text-0);">Shortcut Keyboard (Khusus Mode Editor)</h4>
+        <ul style="padding-left: 18px; margin-top: 4px;">
+          <li><kbd>Ctrl + C</kbd> : Menyalin (copy) node beserta seluruh sub-cabangnya.</li>
+          <li><kbd>Ctrl + V</kbd> : Menempelkan (paste) struktur node ke parent yang dipilih.</li>
+          <li><kbd>Delete</kbd> / <kbd>Backspace</kbd> : Menghapus node beserta seluruh cabang turunannya.</li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button class="mini-btn primary" id="closeHelpFooter" style="width: auto; margin: 0;">Tutup Panduan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
-
